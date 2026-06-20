@@ -1,0 +1,1841 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Project Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:#1C1A17;--muted:#7A746E;--faint:#A8A29C;--border:#E4DFD8;
+  --sand:#F4F0E8;--cream:#FAFAF6;--white:#FFFFFF;
+  --gold:#A8895A;--gold-light:#C9A97A;--gold-bg:#FBF6EE;
+  --done:#3D6B50;--done-bg:#EEF4F0;
+  --prog:#5A6E8A;--prog-bg:#EBF0F6;
+  --blocked:#8A5A3D;--blocked-bg:#F5EEEA;
+  --note:#6B5F4A;--note-bg:#F4F0E8;
+  --question:#7A5A8A;--question-bg:#F2EEF5;
+  --bug:#B03A3A;--bug-bg:#FAEAEA;
+  --improvement:#3A6BA8;--improvement-bg:#E8EFF8;
+  --task:#5A7A3A;--task-bg:#EDF4E8;
+  --feature:#7A4A90;--feature-bg:#F3EDF8;
+  --review:#A07030;--review-bg:#FAF3E8;
+  --testing:#2A8080;--testing-bg:#E6F5F5;
+}
+body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--ink);font-size:14px;line-height:1.6;min-height:100vh}
+
+/* ── TOPBAR ── */
+#topbar{background:var(--ink);border-bottom:3px solid var(--gold);position:sticky;top:0;z-index:200;display:flex;align-items:center;gap:14px;padding:10px 24px;flex-wrap:nowrap}
+#brand-eye{font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold-light);white-space:nowrap;flex-shrink:0}
+#main-tabs{display:flex;align-items:center;gap:2px;flex-shrink:0}
+.main-tab{padding:7px 16px;background:none;border:none;border-bottom:2px solid transparent;border-radius:3px;color:#999;font-size:12px;font-family:inherit;font-weight:400;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:6px;transition:color .15s,background .15s}
+.main-tab:hover{background:#2a2825;color:#ccc}
+.main-tab.active{background:#2a2825;color:#fff;font-weight:600}
+#topbar-actions{display:flex;align-items:center;gap:6px;margin-left:auto;flex-shrink:0}
+#project-switcher{background:#2a2825;color:#eee;border:1px solid #444;border-radius:4px;padding:6px 12px;font-size:13px;font-family:inherit;outline:none;min-width:160px;max-width:220px;cursor:pointer;flex-shrink:0}
+#project-switcher:hover{border-color:#666}
+.tb-btn{padding:6px 12px;background:none;border:1px solid #444;border-radius:3px;color:#666;font-size:11px;font-family:inherit;cursor:pointer;white-space:nowrap;flex-shrink:0}
+.tb-btn:hover{border-color:#666;color:#999}
+.tb-btn.danger{border-color:#522;color:#744}
+#sync-status{display:flex;align-items:center;gap:6px;font-size:11px;color:#555;margin-left:6px;margin-right:6px}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:#444;flex-shrink:0}
+.sync-dot.synced{background:#5A8A6A}.sync-dot.syncing{background:var(--gold);animation:pulse 1s infinite}.sync-dot.error{background:#8A4A4A}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* ── SETTINGS DROPDOWN ── */
+#settings-menu{
+  position:absolute;top:calc(100% + 8px);right:0;
+  background:var(--white);border:1px solid var(--border);border-radius:6px;
+  box-shadow:0 10px 30px rgba(0,0,0,.18);min-width:220px;padding:8px;z-index:300;
+}
+#settings-menu.hidden{display:none}
+.sm-section-label{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);padding:8px 10px 4px}
+.sm-item{
+  display:block;width:100%;text-align:left;padding:8px 10px;background:none;border:none;
+  border-radius:4px;font-size:12.5px;color:var(--ink);font-family:inherit;cursor:pointer;
+}
+.sm-item:hover{background:var(--sand)}
+.sm-item.danger{color:#8A4A4A}
+.sm-item.danger:hover{background:#FAEAEA}
+.sm-divider{height:1px;background:var(--border);margin:6px 4px}
+
+/* ── VIEWS ── */
+.view{display:none;animation:fadeIn .2s ease}
+.view.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.view-inner{max-width:1200px;margin:0 auto;padding:32px 28px 80px}
+
+/* ── SHARED CARDS ── */
+.card{background:var(--white);border:1px solid var(--border);border-radius:6px;overflow:hidden;margin-bottom:20px}
+.card-head{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;border-bottom:1px solid var(--border);background:var(--sand)}
+.card-label{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:8px}
+.card-body{padding:20px}
+.card-body-split{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:20px}
+
+/* ── FORM FIELDS ── */
+.field{margin-bottom:16px}.field:last-child{margin-bottom:0}
+.field-label{display:block;font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+.req{color:var(--gold)}
+.f-input,.f-select,.f-textarea{width:100%;border:1px solid var(--border);border-radius:4px;padding:8px 11px;font-size:13.5px;color:var(--ink);font-family:inherit;background:var(--cream);outline:none;transition:border-color .15s,box-shadow .15s;line-height:1.5}
+.f-input:focus,.f-select:focus,.f-textarea:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(168,137,90,.1);background:var(--white)}
+.f-textarea{resize:vertical;min-height:80px}
+.f-select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23A8A29C' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:30px}
+
+/* ── STATUS OPTS ── */
+.status-row{display:flex;gap:8px;flex-wrap:wrap}
+.status-opt{padding:4px 14px;border-radius:20px;border:2px solid transparent;font-size:11px;font-weight:600;letter-spacing:.06em;cursor:pointer;font-family:inherit;transition:all .15s}
+.status-opt.active{border-color:currentColor}
+
+/* ── STAT BAR ── */
+.stat-bar{display:grid;gap:0;background:var(--ink);border-radius:6px;margin-bottom:24px}
+.stat-item{padding:16px 22px;border-right:1px solid #333}
+.stat-item:last-child{border-right:none}
+.stat-val{font-family:'Cormorant Garamond',serif;font-size:36px;font-weight:300;color:#fff;line-height:1}
+.stat-lbl{font-size:10px;letter-spacing:.1em;text-transform:uppercase;margin-top:4px;color:#666}
+.stat-done .stat-val{color:#6BAA88}.stat-done .stat-lbl{color:#4A8A68}
+.stat-prog .stat-val{color:#7A9ABE}.stat-prog .stat-lbl{color:#5A7A9E}
+.stat-issue .stat-val{color:#C08A6A}.stat-issue .stat-lbl{color:#A06A4A}
+.pr-bar-wrap{background:#2a2825;border-radius:3px;height:5px;margin-top:8px;overflow:hidden}
+.pr-bar-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#6BAA88,#5A9A78);transition:width .5s}
+
+/* ── GENERIC LIST ITEMS ── */
+.list-item{display:grid;align-items:center;gap:10px;padding:10px 14px;border:1px solid var(--border);border-radius:5px;background:var(--cream);margin-bottom:8px}
+.btn-add{display:flex;align-items:center;gap:6px;padding:8px 14px;background:none;border:1px dashed var(--border);border-radius:4px;font-size:12px;color:var(--faint);cursor:pointer;font-family:inherit;margin-top:8px;width:100%}
+.btn-add:hover{border-color:var(--gold);color:var(--gold)}
+.del-btn{background:none;border:none;cursor:pointer;color:var(--faint);font-size:13px;padding:0 2px}
+.del-btn:hover{color:var(--blocked)}
+.txt-input{border:none;outline:none;background:transparent;font-family:inherit;font-size:13.5px;color:var(--ink);width:100%}
+.txt-input::placeholder{color:var(--faint)}
+.small-select{border:1px solid var(--border);border-radius:4px;padding:3px 8px;font-size:12px;font-family:inherit;color:var(--muted);background:var(--white);outline:none;appearance:none;cursor:pointer}
+.small-select:focus{border-color:var(--gold)}
+
+/* ── PILL SELECTS ── */
+.pill-sel{border:none;border-radius:20px;padding:3px 9px;font-size:10px;font-weight:600;letter-spacing:.05em;font-family:inherit;cursor:pointer;outline:none;appearance:none;white-space:nowrap}
+
+/* ── TAGS ── */
+.tag-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.tag-chip{padding:3px 10px;border-radius:20px;border:1px solid var(--border);font-size:11px;color:var(--muted);background:var(--cream);display:inline-flex;align-items:center;gap:4px}
+.tag-chip button{background:none;border:none;color:var(--faint);cursor:pointer;font-size:11px;line-height:1;padding:0}
+.tag-input-row{display:flex;gap:8px;margin-top:8px}
+.tag-in{flex:1;border:1px solid var(--border);border-radius:4px;padding:5px 10px;font-size:12px;font-family:inherit;outline:none;background:var(--cream)}
+.tag-in:focus{border-color:var(--gold)}
+.tag-add{padding:5px 12px;background:var(--sand);border:1px solid var(--border);border-radius:4px;font-size:11px;font-family:inherit;cursor:pointer;color:var(--muted)}
+.tag-add:hover{border-color:var(--gold);color:var(--gold)}
+
+/* ── TEAM ── */
+.team-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.team-card{background:var(--cream);border:1px solid var(--border);border-radius:5px;padding:14px;position:relative}
+.team-avatar{width:34px;height:34px;border-radius:50%;background:var(--sand);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--muted);flex-shrink:0;text-transform:uppercase}
+.team-row{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+
+/* ── DAILY LOG ── */
+
+/* ── PROGRESS REPORT ── */
+.pr-filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center}
+.pr-filter{padding:4px 14px;border-radius:20px;border:1px solid var(--border);font-size:11px;font-family:inherit;cursor:pointer;background:var(--white);color:var(--muted);font-weight:500}
+.pr-filter:hover{border-color:var(--gold);color:var(--gold)}
+.pr-filter.active{background:var(--ink);color:#fff;border-color:var(--ink)}
+.pr-search{flex:1;max-width:240px;border:1px solid var(--border);border-radius:4px;padding:5px 11px;font-size:12px;font-family:inherit;outline:none;background:var(--white)}
+.pr-search:focus{border-color:var(--gold)}
+.pr-add-btn{padding:5px 14px;background:var(--ink);color:#fff;border:none;border-radius:4px;font-size:11px;font-family:inherit;cursor:pointer;margin-left:auto}
+.pr-add-btn:hover{background:#2e2b27}
+.pr-table-wrap{background:var(--white);border:1px solid var(--border);border-radius:6px;overflow:hidden}
+.pr-table{width:100%;border-collapse:collapse}
+.pr-table th{padding:9px 13px;background:var(--sand);font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);text-align:left;border-bottom:1px solid var(--border);white-space:nowrap}
+.pr-table td{padding:0;border-bottom:1px solid var(--border);vertical-align:top}
+.pr-table tr:last-child td{border-bottom:none}
+.pr-table tr:hover td{background:#FAFAF0}
+.pr-td{padding:8px 13px;display:flex;align-items:flex-start}
+.pr-week-hdr td{background:var(--sand);padding:7px 13px;font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border)}
+.pr-text-ta{border:none;outline:none;background:transparent;font-family:inherit;font-size:13px;color:var(--ink);resize:none;overflow:hidden;line-height:1.5;min-height:20px;width:100%;padding:0}
+.pr-text-ta::placeholder{color:var(--faint)}
+.pr-note-ta{border:none;outline:none;background:transparent;font-family:inherit;font-size:12px;color:var(--muted);resize:none;overflow:hidden;line-height:1.5;min-height:18px;width:100%;padding:0}
+.pr-note-ta::placeholder{color:var(--faint);font-style:italic}
+.pr-date-in{border:1px solid var(--border);border-radius:3px;padding:3px 7px;font-size:11px;font-family:inherit;color:var(--muted);background:var(--cream);outline:none}
+.pr-date-in:focus{border-color:var(--gold)}
+.ps-Completed{background:var(--done-bg);color:var(--done)}
+.ps-In-Progress{background:var(--prog-bg);color:var(--prog)}
+.ps-Issues{background:var(--blocked-bg);color:var(--blocked)}
+.ps-Planning{background:var(--sand);color:var(--muted)}
+
+/* ── CLOUD MODAL ── */
+#cloud-overlay{position:fixed;inset:0;background:rgba(28,26,23,.75);display:flex;align-items:center;justify-content:center;z-index:1000;backdrop-filter:blur(4px)}
+#cloud-overlay.hidden{display:none}
+#pin-overlay{display:flex}
+#pin-overlay.hidden{display:none}
+.cloud-modal{background:var(--white);border-radius:8px;padding:36px 40px;max-width:480px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.cm-eye{font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);margin-bottom:8px}
+.cm-title{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:300;margin-bottom:8px}
+.cm-sub{font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.6}
+.cm-steps{background:var(--sand);border-radius:4px;padding:14px 16px;margin-bottom:20px;font-size:12px;color:var(--muted);line-height:2}
+.cm-steps a{color:var(--gold)}.cm-steps b{color:var(--ink)}
+.cm-label{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:5px;display:block}
+.cm-input{width:100%;border:1px solid var(--border);border-radius:4px;padding:9px 12px;font-size:13px;font-family:inherit;outline:none;margin-bottom:10px}
+.cm-input:focus{border-color:var(--gold)}
+.cm-btn{width:100%;padding:11px;background:var(--ink);color:#fff;border:none;border-radius:4px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit}
+.cm-btn:hover{background:#2e2b27}
+.cm-skip{display:block;text-align:center;margin-top:10px;font-size:12px;color:var(--faint);cursor:pointer;text-decoration:underline}
+
+/* ── SAVE ROW ── */
+.save-row{display:flex;align-items:center;gap:16px;margin-top:28px;padding-top:24px;border-top:1px solid var(--border)}
+.save-main-btn{padding:10px 26px;background:var(--ink);color:#fff;border:none;border-radius:4px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit}
+.save-main-btn:hover{background:#2e2b27}
+.last-saved{font-size:11px;color:var(--faint)}
+
+/* ── PAGE HEADER ── */
+.pg-eye{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:6px}
+.pg-title{font-family:'Cormorant Garamond',serif;font-size:34px;font-weight:300;font-style:italic;line-height:1.15;margin-bottom:6px}
+.pg-sub{font-size:13px;color:var(--muted);margin-bottom:28px}
+
+/* ── MILESTONE ── */
+.ms-item{display:grid;grid-template-columns:24px 1fr auto auto auto;align-items:center;gap:10px;padding:11px 14px;border:1px solid var(--border);border-radius:5px;background:var(--cream);margin-bottom:8px}
+.ms-num{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:300;color:var(--border);text-align:center}
+
+/* ── WORK ITEMS ── */
+.work-item{display:grid;grid-template-columns:auto 1fr auto auto;align-items:flex-start;gap:10px;padding:10px 14px;border:1px solid var(--border);border-radius:5px;background:var(--cream);margin-bottom:8px}
+.work-ta{border:none;outline:none;background:transparent;font-family:inherit;font-size:13.5px;color:var(--ink);resize:none;overflow:hidden;line-height:1.5;min-height:22px;width:100%;padding:0}
+.work-ta::placeholder{color:var(--faint)}
+
+@media(max-width:800px){
+  .card-body-split{grid-template-columns:1fr}
+  .team-grid{grid-template-columns:1fr}
+  .stat-bar{grid-template-columns:1fr 1fr}
+  .stat-item{border-right:none;border-bottom:1px solid #333}
+  #projects-grid{grid-template-columns:1fr!important}
+  #topbar{flex-wrap:wrap;gap:8px 14px;padding:10px 16px}
+  #topbar-actions{margin-left:0;width:100%;justify-content:flex-end}
+}
+@media print{#topbar,#cloud-overlay,.btn-add,.del-btn,.save-row,#topbar-actions{display:none!important}}
+
+/* ── LOGIN SCREEN ── */
+#login-screen{position:fixed;inset:0;background:linear-gradient(135deg,var(--ink) 0%,#2a2520 100%);display:flex;align-items:center;justify-content:center;z-index:2000}
+#login-screen.hidden{display:none}
+.login-box{background:var(--white);border-radius:10px;padding:44px 44px 36px;max-width:380px;width:90%;box-shadow:0 24px 70px rgba(0,0,0,.4);border-top:3px solid var(--gold)}
+.login-eye{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:10px;text-align:center}
+.login-title{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:300;text-align:center;margin-bottom:6px}
+.login-title em{font-style:italic;color:var(--gold)}
+.login-sub{font-size:13px;color:var(--muted);text-align:center;margin-bottom:28px}
+.login-error{font-size:12px;color:#B03A3A;text-align:center;margin-top:10px;min-height:16px}
+#app-root.hidden{display:none}
+
+/* ── MANAGE TEAM ── */
+.mgr-card{display:flex;align-items:center;gap:12px;padding:11px 14px;border:1px solid var(--border);border-radius:5px;background:var(--cream);margin-bottom:8px}
+.mgr-avatar{width:30px;height:30px;border-radius:50%;background:var(--sand);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--muted);flex-shrink:0;text-transform:uppercase}
+.mgr-proj-list{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+.mgr-proj-chip{font-size:10px;padding:2px 8px;border-radius:12px;background:var(--prog-bg);color:var(--prog)}
+.proj-check-row{display:flex;align-items:center;gap:8px;padding:5px 0;font-size:13px}
+.proj-check-row input{cursor:pointer}
+
+/* ── CATEGORIES (per-project) ── */
+.cat-row{display:flex;align-items:center;gap:10px;padding:8px 12px;border:1px solid var(--border);border-radius:5px;background:var(--cream);margin-bottom:6px}
+.cat-swatch{width:14px;height:14px;border-radius:4px;flex-shrink:0}
+.cat-name-input{flex:1;border:none;outline:none;background:transparent;font-family:inherit;font-size:13px;color:var(--ink)}
+
+/* ── PROJECT CARDS ── */
+.proj-card{background:var(--white);border:1px solid var(--border);border-radius:8px;padding:18px;cursor:pointer;transition:all .15s;position:relative}
+.proj-card:hover{border-color:var(--gold);box-shadow:0 4px 14px rgba(168,137,90,.12);transform:translateY(-1px)}
+.proj-card.active{border-color:var(--gold);border-width:2px;background:var(--gold-bg)}
+.proj-card .del-btn{position:absolute;top:14px;right:14px}
+.proj-new{display:flex;flex-direction:column;align-items:center;justify-content:center;border:2px dashed var(--border);background:var(--cream);min-height:140px}
+.proj-new:hover{border-color:var(--gold);background:var(--gold-bg)}
+</style>
+</head>
+<body>
+
+<!-- Login Screen -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-eye">ArrowheadX AI</div>
+    <h1 class="login-title">Project <em>Portal</em></h1>
+    <p class="login-sub">Sign in to access your assigned projects.</p>
+
+    <label class="cm-label">Name</label>
+    <input class="cm-input" id="login-name" type="text" placeholder="Your name" autocomplete="off" onkeydown="if(event.key==='Enter')document.getElementById('login-pin').focus()">
+
+    <label class="cm-label">PIN</label>
+    <input class="cm-input" id="login-pin" type="password" inputmode="numeric" placeholder="••••" maxlength="12" onkeydown="if(event.key==='Enter')doLogin()">
+
+    <button class="cm-btn" onclick="doLogin()">Sign In</button>
+    <div id="login-error" class="login-error"></div>
+  </div>
+</div>
+
+<!-- App container (hidden until logged in) -->
+<div id="app-root" class="hidden">
+
+<!-- Cloud sync modal -->
+<div id="cloud-overlay" class="hidden">
+  <div class="cloud-modal">
+    <div class="cm-eye">Cloud Sync Setup</div>
+    <div class="cm-title">Connect to the Cloud</div>
+    <div class="cm-sub">All three sections — Project Hub, Daily Log, and Progress Report — sync through one JSONBin record across every device.</div>
+    <div class="cm-steps">
+      <b>1.</b> Go to <a href="https://jsonbin.io" target="_blank">jsonbin.io</a> and create a free account<br>
+      <b>2.</b> Click your avatar → <b>API Keys</b> → copy your <b>Master Key</b><br>
+      <b>3.</b> Paste it below and click Connect — a bin is created for you
+    </div>
+    <label class="cm-label">Master Key</label>
+    <input class="cm-input" id="cm-key" type="password" placeholder="$2a$10$…">
+    <label class="cm-label">Bin ID <span style="font-weight:400;text-transform:none;letter-spacing:0">(leave blank first time)</span></label>
+    <input class="cm-input" id="cm-bin" placeholder="Will be created automatically">
+    <button class="cm-btn" onclick="connectCloud()">⚡ Connect &amp; Sync</button>
+    <span class="cm-skip" onclick="skipCloud()">Skip — use local storage only</span>
+  </div>
+</div>
+
+<!-- Change My PIN modal -->
+<div id="pin-overlay" class="hidden" style="position:fixed;inset:0;background:rgba(28,26,23,.75);align-items:center;justify-content:center;z-index:1001;backdrop-filter:blur(4px)">
+  <div class="cloud-modal" style="max-width:340px">
+    <div class="cm-eye">My Account</div>
+    <div class="cm-title">Change My PIN</div>
+    <div class="cm-sub" id="pin-modal-name">Signed in as —</div>
+    <label class="cm-label">Current PIN</label>
+    <input class="cm-input" id="pin-current" type="password" inputmode="numeric" placeholder="••••" maxlength="12">
+    <label class="cm-label">New PIN</label>
+    <input class="cm-input" id="pin-new" type="password" inputmode="numeric" placeholder="4+ digits" maxlength="12">
+    <label class="cm-label">Confirm New PIN</label>
+    <input class="cm-input" id="pin-confirm" type="password" inputmode="numeric" placeholder="4+ digits" maxlength="12" onkeydown="if(event.key==='Enter')submitChangePin()">
+    <div id="pin-error" class="login-error"></div>
+    <button class="cm-btn" onclick="submitChangePin()">Update PIN</button>
+    <span class="cm-skip" onclick="closeChangePinModal()">Cancel</span>
+  </div>
+</div>
+
+<!-- Topbar -->
+<div id="topbar">
+  <div id="brand-eye">ArrowheadX AI</div>
+
+  <select id="project-switcher" onchange="handleProjectSwitcherChange(this.value)"></select>
+
+  <div id="main-tabs">
+    <button class="main-tab active" onclick="showTab('hub')" id="t-hub">🗂 Project Hub</button>
+    <button class="main-tab" onclick="showTab('log')" id="t-log">📓 Daily Log</button>
+    <button class="main-tab" onclick="showTab('pr')" id="t-pr">📊 Progress Report</button>
+  </div>
+
+  <button class="main-tab" onclick="showTab('projects')" id="t-projects">🗇 All Projects</button>
+
+  <div id="topbar-actions">
+    <span id="manager-badge" style="font-size:11px;color:#999;margin-right:6px"></span>
+    <div id="sync-status"><div class="sync-dot" id="sync-dot"></div><span id="sync-lbl">local</span></div>
+    <div style="position:relative">
+      <button class="tb-btn" onclick="toggleSettingsMenu()" id="settings-btn">⚙ Settings</button>
+      <div id="settings-menu" class="hidden">
+        <div class="sm-section-label">Account</div>
+        <button class="sm-item" onclick="closeSettingsMenu();openChangePinModal()">🔑 Change My PIN</button>
+        <button class="sm-item" id="sm-team-access" onclick="closeSettingsMenu();showTab('team')" style="display:none">🔐 Team Access</button>
+        <div class="sm-divider"></div>
+        <div class="sm-section-label">Cloud Sync</div>
+        <button class="sm-item" onclick="closeSettingsMenu();refreshCloud()">☁ Refresh from Cloud</button>
+        <button class="sm-item" onclick="closeSettingsMenu();showCloudSetup()">⚙ Sync Settings</button>
+        <div class="sm-divider"></div>
+        <div class="sm-section-label">Data</div>
+        <button class="sm-item" onclick="closeSettingsMenu();exportAll()">⬇ Export All Data</button>
+        <button class="sm-item" onclick="closeSettingsMenu();document.getElementById('imp-file').click()">⬆ Import All Data</button>
+        <input type="file" id="imp-file" accept=".json" style="display:none" onchange="importAll(this)">
+        <button class="sm-item" onclick="closeSettingsMenu();window.print()">⎙ Print Current Tab</button>
+        <div class="sm-divider"></div>
+        <button class="sm-item danger" onclick="closeSettingsMenu();resetAll()">↺ Reset All Data</button>
+        <div class="sm-divider"></div>
+        <button class="sm-item danger" onclick="closeSettingsMenu();doLogout()">⏻ Logout</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- TAB — TEAM ACCESS (admin only, accessed via Settings)      -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- (view-team kept below; its tab button removed from main nav, opened only via Settings menu) -->
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- continuation -->
+<!-- TAB 0 — ALL PROJECTS (landing page)                        -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<div class="view active" id="view-projects">
+<div class="view-inner">
+  <button class="tb-btn" id="projects-back-btn" onclick="showTab('hub')" style="margin-bottom:16px;display:none">← Back to Project Hub</button>
+  <div class="pg-eye">ArrowheadX AI</div>
+  <h1 class="pg-title">All <em>Projects</em></h1>
+  <p class="pg-sub">Select a project to open it, or create a new one. All projects sync through the same cloud connection.</p>
+  <div id="projects-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px"></div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- TAB 1 — PROJECT HUB                                        -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<div class="view" id="view-hub">
+<div class="view-inner">
+
+  <div class="pg-eye">Project Brief</div>
+  <h1 class="pg-title" id="hub-page-title">Project <em>Details</em></h1>
+  <p class="pg-sub">Client and project information. Saves automatically.</p>
+
+  <!-- Summary bar -->
+  <div class="stat-bar" id="hub-stat-bar" style="grid-template-columns:repeat(4,1fr)">
+    <div class="stat-item"><div class="stat-val" id="h-ms">0</div><div class="stat-lbl">Milestones</div></div>
+    <div class="stat-item"><div class="stat-val" id="h-wi">0</div><div class="stat-lbl">Work Items</div></div>
+    <div class="stat-item"><div class="stat-val" id="h-tm">0</div><div class="stat-lbl">Team Members</div></div>
+    <div class="stat-item"><div class="stat-val" id="h-st">—</div><div class="stat-lbl">Project Status</div></div>
+  </div>
+
+  <!-- Client & Project -->
+  <div class="card">
+    <div class="card-head"><span class="card-label">🏨 Client &amp; Project Info</span></div>
+    <div class="card-body-split">
+      <div>
+        <div class="field"><label class="field-label">Client Name <span class="req">*</span></label><input class="f-input" id="h-client" placeholder="e.g. Andreas Hotel &amp; Spa" oninput="hubAutosave()"></div>
+        <div class="field"><label class="field-label">Contact Person</label><input class="f-input" id="h-contact" placeholder="Primary point of contact" oninput="hubAutosave()"></div>
+        <div class="field"><label class="field-label">Contact Email</label><input class="f-input" type="email" id="h-email" placeholder="email@example.com" oninput="hubAutosave()"></div>
+        <div class="field"><label class="field-label">Website / URL</label><input class="f-input" id="h-url" placeholder="https://" oninput="hubAutosave()"></div>
+      </div>
+      <div>
+        <div class="field"><label class="field-label">Project Name <span class="req">*</span></label><input class="f-input" id="h-project" placeholder="e.g. Website Revamp 2026" oninput="hubAutosave()"></div>
+        <div class="field"><label class="field-label">Project Type</label><select class="f-select" id="h-type" onchange="hubAutosave()"><option value="">Select type…</option><option>Website Revamp</option><option>New Website</option><option>E-commerce</option><option>Booking System</option><option>Branding</option><option>SEO / Marketing</option><option>Maintenance</option><option>Other</option></select></div>
+        <div class="field"><label class="field-label">Start Date</label><input class="f-input" type="date" id="h-start" oninput="hubAutosave()"></div>
+        <div class="field"><label class="field-label">Target Launch Date</label><input class="f-input" type="date" id="h-launch" oninput="hubAutosave()"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Status -->
+  <div class="card">
+    <div class="card-head"><span class="card-label">📊 Project Status</span></div>
+    <div class="card-body">
+      <div class="field"><label class="field-label">Current Status</label>
+        <div class="status-row" id="hub-status-row">
+          <button class="status-opt" style="background:var(--sand);color:var(--muted)" data-val="planning" onclick="setHubStatus(this)">Planning</button>
+          <button class="status-opt" style="background:var(--prog-bg);color:var(--prog)" data-val="active" onclick="setHubStatus(this)">Active</button>
+          <button class="status-opt" style="background:var(--question-bg);color:var(--question)" data-val="review" onclick="setHubStatus(this)">In Review</button>
+          <button class="status-opt" style="background:var(--blocked-bg);color:var(--blocked)" data-val="on-hold" onclick="setHubStatus(this)">On Hold</button>
+          <button class="status-opt" style="background:var(--done-bg);color:var(--done)" data-val="completed" onclick="setHubStatus(this)">Completed</button>
+        </div>
+      </div>
+      <div class="field" style="margin-top:14px"><label class="field-label">Budget</label><input class="f-input" id="h-budget" placeholder="e.g. $5,000 or Fixed / Hourly" oninput="hubAutosave()" style="max-width:300px"></div>
+    </div>
+  </div>
+
+  <!-- Description -->
+  <div class="card">
+    <div class="card-head"><span class="card-label">📝 Description &amp; Goals</span></div>
+    <div class="card-body">
+      <div class="field"><label class="field-label">Project Description <span class="req">*</span></label><textarea class="f-textarea" id="h-desc" rows="3" placeholder="Briefly describe the project…" oninput="hubAutosave()"></textarea></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div class="field"><label class="field-label">Primary Goal</label><textarea class="f-textarea" id="h-goal1" rows="2" placeholder="The #1 thing this project must achieve…" oninput="hubAutosave()"></textarea></div>
+        <div class="field"><label class="field-label">Secondary Goals</label><textarea class="f-textarea" id="h-goal2" rows="2" placeholder="Additional objectives…" oninput="hubAutosave()"></textarea></div>
+      </div>
+      <div class="field"><label class="field-label">Target Audience</label><input class="f-input" id="h-audience" placeholder="Who is the end user?" oninput="hubAutosave()"></div>
+      <div class="field"><label class="field-label">Tags</label>
+        <div class="tag-row" id="hub-tag-row"></div>
+        <div class="tag-input-row"><input class="tag-in" id="hub-tag-in" placeholder="Add tag and press Enter…" onkeydown="if(event.key==='Enter'){hubAddTag();event.preventDefault()}"><button class="tag-add" onclick="hubAddTag()">+ Add</button></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Categories (used by Daily Log + Progress Report) -->
+  <div class="card">
+    <div class="card-head"><span class="card-label">🏷 Categories</span><span style="font-size:11px;color:var(--faint)" id="cat-count">0 categories</span></div>
+    <div class="card-body">
+      <p style="font-size:12px;color:var(--muted);margin-bottom:12px">Used by this project's Daily Log and Progress Report. Each project has its own list.</p>
+      <div id="cat-list"></div>
+      <div style="display:flex;gap:10px;margin-top:10px">
+        <input class="f-input" id="new-cat-name" placeholder="New category name…" onkeydown="if(event.key==='Enter'){hubAddCategory();event.preventDefault()}">
+        <button class="pr-add-btn" style="margin-left:0;padding:9px 18px;white-space:nowrap" onclick="hubAddCategory()">+ Add</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Work Items -->
+  <div class="card">
+    <div class="card-head"><span class="card-label">🔧 Work To Be Done</span><span style="font-size:11px;color:var(--faint)" id="wi-count">0 items</span></div>
+    <div class="card-body"><div id="wi-list"></div><button class="btn-add" onclick="hubAddWork()">+ Add work item</button></div>
+  </div>
+
+  <!-- Milestones -->
+  <div class="card">
+    <div class="card-head"><span class="card-label">🏁 Milestones</span><span style="font-size:11px;color:var(--faint)" id="ms-count">0 milestones</span></div>
+    <div class="card-body"><div id="ms-list"></div><button class="btn-add" onclick="hubAddMs()">+ Add milestone</button></div>
+  </div>
+
+  <!-- Team -->
+  <div class="card">
+    <div class="card-head"><span class="card-label">👥 Team &amp; Contacts</span><span style="font-size:11px;color:var(--faint)" id="tm-count">0 members</span></div>
+    <div class="card-body"><div class="team-grid" id="tm-grid"></div><button class="btn-add" style="margin-top:12px" onclick="hubAddMember()">+ Add person</button></div>
+  </div>
+
+  <!-- Notes -->
+  <div class="card">
+    <div class="card-head"><span class="card-label">💬 Notes &amp; Open Questions</span></div>
+    <div class="card-body" style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div class="field"><label class="field-label">General Notes</label><textarea class="f-textarea" id="h-notes" rows="5" placeholder="Anything else the team should know…" oninput="hubAutosave()" style="min-height:110px"></textarea></div>
+      <div class="field"><label class="field-label">Open Questions</label><textarea class="f-textarea" id="h-questions" rows="5" placeholder="Unresolved decisions, pending answers…" oninput="hubAutosave()" style="min-height:110px"></textarea></div>
+    </div>
+  </div>
+
+  <div class="save-row"><button class="save-main-btn" onclick="mainSave()">💾 Save</button><span class="last-saved" id="hub-last-saved"></span></div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- TAB 2 — DAILY LOG                                          -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<div class="view" id="view-log">
+<div class="view-inner">
+  <div class="pg-eye">Daily Log</div>
+  <h1 class="pg-title" id="log-page-title">Project <em>Daily Log</em></h1>
+  <p class="pg-sub">Log entries below. They feed directly into the Progress Report.</p>
+
+  <!-- Entry form -->
+  <div class="card">
+    <div class="card-head"><span class="card-label">＋ New Entry</span></div>
+    <div class="card-body" style="display:grid;grid-template-columns:1.3fr 2fr 1fr 1fr;gap:14px;align-items:end">
+      <div class="field" style="margin-bottom:0">
+        <label class="field-label">Category</label>
+        <select class="f-select" id="dl-f-cat"></select>
+      </div>
+      <div class="field" style="margin-bottom:0">
+        <label class="field-label">Task / Description</label>
+        <input class="f-input" id="dl-f-task" placeholder="What was done…">
+      </div>
+      <div class="field" style="margin-bottom:0">
+        <label class="field-label">Status</label>
+        <select class="f-select" id="dl-f-status"></select>
+      </div>
+      <div class="field" style="margin-bottom:0">
+        <label class="field-label">Date</label>
+        <input class="f-input" type="date" id="dl-f-date">
+      </div>
+    </div>
+    <div class="card-body" style="padding-top:0;display:grid;grid-template-columns:1fr auto;gap:14px;align-items:end">
+      <div class="field" style="margin-bottom:0">
+        <label class="field-label">Notes</label>
+        <input class="f-input" id="dl-f-notes" placeholder="Optional notes…">
+      </div>
+      <button class="pr-add-btn" style="margin-left:0;padding:9px 20px" onclick="dlAddEntry()">+ Add to List</button>
+    </div>
+  </div>
+
+  <!-- Entry list -->
+  <div class="card">
+    <div class="card-head"><span class="card-label">📋 Entries</span><span style="font-size:11px;color:var(--faint)" id="dl-count">0 entries</span></div>
+    <div class="card-body" style="padding:0">
+      <table class="pr-table">
+        <thead><tr>
+          <th style="width:155px">Category</th>
+          <th>Task / Description</th>
+          <th style="width:130px">Status</th>
+          <th style="width:110px">Date</th>
+          <th>Notes</th>
+          <th style="width:28px"></th>
+        </tr></thead>
+        <tbody id="dl-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Save row -->
+  <div class="save-row">
+    <button class="save-main-btn" onclick="dlSaveAll()">💾 Save Daily Log</button>
+    <span class="last-saved" id="dl-last-saved"></span>
+    <span style="font-size:11px;color:var(--faint);margin-left:auto">Saved entries are also added to the Progress Report</span>
+  </div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- TAB 3 — PROGRESS REPORT                                    -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<div class="view" id="view-pr">
+<div class="view-inner">
+  <div class="pg-eye">Progress Report</div>
+  <h1 class="pg-title" id="pr-page-title">Project <em>Tracker</em></h1>
+
+  <!-- Meta -->
+  <div style="display:flex;gap:20px;flex-wrap:wrap;margin-bottom:20px;align-items:flex-end">
+    <div><div class="field-label" style="margin-bottom:4px">Period</div><input class="f-input" id="pr-period" placeholder="e.g. June 8 – June 22" oninput="prMetaSave()" style="width:200px"></div>
+    <div><div class="field-label" style="margin-bottom:4px">Target Date</div><input class="f-input" type="date" id="pr-target" oninput="prMetaSave()" style="width:160px"></div>
+    <div style="flex:1"><div class="field-label" style="margin-bottom:4px">Risk / Notes</div><input class="f-input" id="pr-risk" placeholder="e.g. Awaiting photos from client" oninput="prMetaSave()"></div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stat-bar" id="pr-stat-bar" style="grid-template-columns:repeat(5,1fr)">
+    <div class="stat-item"><div class="stat-val" id="pr-total">0</div><div class="stat-lbl">Total Tasks</div><div class="pr-bar-wrap"><div class="pr-bar-fill" id="pr-bar" style="width:0%"></div></div></div>
+    <div class="stat-item" style="border-right:1px solid #333"><div class="stat-val" id="pr-planning" style="color:#999">0</div><div class="stat-lbl">Planning</div></div>
+    <div class="stat-item stat-prog"><div class="stat-val" id="pr-prog">0</div><div class="stat-lbl">In Progress</div></div>
+    <div class="stat-item stat-done"><div class="stat-val" id="pr-done">0</div><div class="stat-lbl">Completed</div></div>
+    <div class="stat-item stat-issue"><div class="stat-val" id="pr-issue">0</div><div class="stat-lbl">Issues / Needed</div></div>
+  </div>
+
+  <!-- Filters -->
+  <div class="pr-filters">
+    <button class="pr-filter active" onclick="prSetFilter('all',this)">All</button>
+    <button class="pr-filter" onclick="prSetFilter('Planning',this)" style="color:var(--muted)">○ Planning</button>
+    <button class="pr-filter" onclick="prSetFilter('In Progress',this)" style="color:var(--prog)">◷ In Progress</button>
+    <button class="pr-filter" onclick="prSetFilter('Completed',this)" style="color:var(--done)">✓ Completed</button>
+    <button class="pr-filter" onclick="prSetFilter('Issues / Needed',this)" style="color:var(--blocked)">! Issues</button>
+    <input class="pr-search" id="pr-search" placeholder="Search tasks…" oninput="prRender()">
+    <button class="tb-btn" onclick="prExportTasks()" title="Download just this project's tasks as JSON" style="margin-left:auto">⬇ Export</button>
+    <button class="tb-btn" onclick="document.getElementById('pr-imp-file').click()" title="Restore tasks from a JSON file">⬆ Import</button>
+    <input type="file" id="pr-imp-file" accept=".json" style="display:none" onchange="prImportTasks(this)">
+    <button class="pr-add-btn" onclick="prAddTask()">+ Add Task</button>
+  </div>
+
+  <!-- Table -->
+  <div class="pr-table-wrap">
+    <table class="pr-table">
+      <thead><tr>
+        <th style="width:155px">Category</th>
+        <th>Task / Description</th>
+        <th style="width:130px">Status</th>
+        <th style="width:120px">Date</th>
+        <th>Notes</th>
+        <th style="width:28px"></th>
+      </tr></thead>
+      <tbody id="pr-tbody"></tbody>
+    </table>
+  </div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- TAB — TEAM ACCESS (admin only)                             -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<div class="view" id="view-team">
+<div class="view-inner">
+  <button class="tb-btn" onclick="showTab('hub')" style="margin-bottom:16px">← Back to Project Hub</button>
+  <div class="pg-eye">Admin</div>
+  <h1 class="pg-title">Team <em>Access</em></h1>
+  <p class="pg-sub">Manage who can sign in and which projects they can see. This is separate from any single project.</p>
+
+  <div class="card">
+    <div class="card-head"><span class="card-label">🔐 Managers</span><span style="font-size:11px;color:var(--faint)" id="mgr-count">0 managers</span></div>
+    <div class="card-body"><div id="mgr-list"></div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><span class="card-label">＋ Add New Manager</span></div>
+    <div class="card-body">
+      <div style="display:grid;grid-template-columns:1.2fr 1fr auto;gap:10px;align-items:end;margin-bottom:14px">
+        <div><label class="field-label">Name</label><input class="f-input" id="new-mgr-name" placeholder="Manager's name"></div>
+        <div><label class="field-label">PIN</label><input class="f-input" id="new-mgr-pin" placeholder="4+ digit PIN" maxlength="12"></div>
+        <button class="pr-add-btn" style="margin-left:0;padding:9px 18px" onclick="addManagerFromForm()">+ Add</button>
+      </div>
+      <label class="field-label" style="margin-bottom:6px;display:block">Assign Projects</label>
+      <div id="new-mgr-projects" style="display:grid;grid-template-columns:1fr 1fr;gap:2px;max-height:160px;overflow-y:auto;border:1px solid var(--border);border-radius:4px;padding:10px;background:var(--cream)"></div>
+    </div>
+  </div>
+</div>
+</div>
+
+</div><!-- /app-root -->
+
+<script>
+// ════════════════════════════════════════════════════════════════
+// CONSTANTS
+// ════════════════════════════════════════════════════════════════
+const STORE_KEY  = 'arrowheadx_portal_v1';
+const CLOUD_KEY  = 'arrowheadx_cloud_config_v1';
+const JB_BASE    = 'https://api.jsonbin.io/v3/b';
+const DL_DAYS    = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+const HUB_STATUSES = {planning:'Plan',active:'Active',review:'Review','on-hold':'Hold',completed:'Done'};
+
+// Per-project categories: each project stores its own list at S.hub.categories.
+// Stable IDs mean renaming a category never breaks existing task references.
+const CAT_PALETTE = [
+  {bg:'#EBF0F6',color:'#5A6E8A'}, {bg:'#F2EEF5',color:'#7A5A8A'},
+  {bg:'#F4F0E8',color:'#6B5F4A'}, {bg:'#F5EEEA',color:'#8A5A3D'},
+  {bg:'#EEF4F0',color:'#3D6B50'}, {bg:'#E8EFF8',color:'#3A6BA8'},
+  {bg:'#F3EDF8',color:'#7A4A90'}, {bg:'#FAF3E8',color:'#A07030'},
+];
+function catColorForIndex(i){ return CAT_PALETTE[i % CAT_PALETTE.length]; }
+
+const DEFAULT_CATEGORIES = [
+  {id:'cat-design-ui',     name:'Design & UI'},
+  {id:'cat-frontend',      name:'Frontend Development'},
+  {id:'cat-backend-infra', name:'Backend & Infrastructure'},
+  {id:'cat-integrations',  name:'Integrations'},
+  {id:'cat-content-assets',name:'Content & Assets'},
+  {id:'cat-ai',            name:'AI / Automation'},
+  {id:'cat-legal',         name:'Legal & Compliance'},
+  {id:'cat-marketing',     name:'Marketing & SEO'},
+  {id:'cat-qa-bugs',       name:'QA / Bugs'},
+  {id:'cat-other',         name:'Other'},
+].map((c,i)=>({...c, color: catColorForIndex(i)}));
+
+function cloneDefaultCategories(){
+  return DEFAULT_CATEGORIES.map(c=>({...c}));
+}
+
+// ── Category helpers — always look up the ACTIVE project's category list ──
+function activeCategories(){
+  if(!S.hub) return [];
+  if(!S.hub.categories || !S.hub.categories.length) S.hub.categories=cloneDefaultCategories();
+  return S.hub.categories;
+}
+function catById(id){
+  return activeCategories().find(c=>c.id===id) || {id:'cat-other',name:'Other',color:{bg:'#F0F0F0',color:'#707070'}};
+}
+function catLabel(id){ return catById(id).name; }
+function catColor(id){ return catById(id).color; }
+function catOptionsHTML(selectedId){
+  return activeCategories().map(c=>`<option value="${esc(c.id)}"${c.id===selectedId?' selected':''}>${esc(c.name)}</option>`).join('');
+}
+function categoryIdInUse(id){
+  const inDl=(S.dl?.entries||[]).some(e=>e.cat===id);
+  const inPr=(S.pr?.tasks||[]).some(t=>t.cat===id);
+  return inDl||inPr;
+}
+const PR_STATUSES = ['Planning','In Progress','Completed','Issues / Needed'];
+const WI_CATS = ['UI','UX','AI','Infrastructure','Booking','Content','Design','Other'];
+const WI_CAT_COLORS = {UI:{bg:'#EBF0F6',color:'#5A6E8A'},UX:{bg:'#F2EEF5',color:'#7A5A8A'},AI:{bg:'#EEF4F0',color:'#3D6B50'},Infrastructure:{bg:'#F4F0E8',color:'#6B5F4A'},Booking:{bg:'#FAF3E8',color:'#A07030'},Content:{bg:'#EBF0F6',color:'#3A6080'},Design:{bg:'#F0ECF8',color:'#6040A0'},Other:{bg:'#F0F0F0',color:'#707070'}};
+const MS_STATUSES = ['pending','active','done','delayed'];
+const MS_LABELS   = {pending:'Pending',active:'Active',done:'Done',delayed:'Delayed'};
+const MS_CLASSES  = {pending:'',active:'ps-In-Progress',done:'ps-Completed',delayed:'ps-Issues'};
+
+// ════════════════════════════════════════════════════════════════
+// STATE — multiple projects, one shared cloud bin
+// ════════════════════════════════════════════════════════════════
+// DB = { projects: { slug: {name, createdAt, hub, dl, pr, nextId} }, activeProject: slug }
+// S  = always points to DB.projects[DB.activeProject] — all existing S.hub/S.dl/S.pr code works unchanged
+let DB = { projects: {}, activeProject: null };
+let S = {};   // pointer to active project's data — DO NOT reassign directly, use setActiveProject()
+let cloudCfg  = null;
+let saveTimer = null;
+let syncTimer = null;
+let prFilterActive = 'all';
+let dlActiveWeek = 0;
+
+function slugify(name){
+  return (name||'project').toLowerCase().trim()
+    .replace(/[^a-z0-9\s-]/g,'').replace(/\s+/g,'-').replace(/-+/g,'-').slice(0,40) || 'project';
+}
+function uniqueSlug(base){
+  let slug=base, n=2;
+  while(DB.projects[slug]) slug=base+'-'+(n++);
+  return slug;
+}
+
+function emptyProjectData(name){
+  return {
+    name: name || 'New Project',
+    createdAt: new Date().toISOString(),
+    hub: {
+      client:name||'',contact:'',email:'',url:'',
+      project:'',type:'',start:'',launch:'',
+      status:'planning',budget:'',desc:'',
+      goal1:'',goal2:'',audience:'',
+      tags:[],notes:'',questions:'',
+      workItems:[],milestones:[],team:[],
+      categories: cloneDefaultCategories(),
+      nextId:1,
+    },
+    dl: { entries: [] },
+    pr: { period:'',targetDate:'',risk:'',tasks:[] },
+    nextId: 1,
+  };
+}
+
+function andreasSeedProject(){
+  const p = emptyProjectData('Andreas Hotel & Spa');
+  Object.assign(p.hub, {
+    client:'Andreas Hotel & Spa',contact:'',email:'',url:'andreashotel.com',
+    project:'Website Revamp 2026',type:'Website Revamp',start:'2026-05-25',launch:'',
+    status:'active',budget:'',desc:'Full website revamp including booking integration, CMS, AI concierge, and legal pages.',
+    goal1:'Launch a fully functional, modern hotel website with integrated booking.',
+    goal2:'Improve UX, add Spa/Events sections, integrate Mailchimp and forms.',
+    audience:'Hotel guests, corporate travellers, event planners',
+    tags:['Hotel','Vercel','Supabase','CMS'],notes:'',questions:'Confirm recipient emails for Contact Us and RFP forms.',
+    workItems:[
+      {id:'w1',cat:'UI',text:'Logo update and dark/light mode toggle',priority:'Done'},
+      {id:'w2',cat:'UX',text:'Rooms and Offers sections content modernization',priority:'Done'},
+      {id:'w3',cat:'Booking',text:'Roommaster booking engine integration via iframe',priority:'Done'},
+      {id:'w4',cat:'Infrastructure',text:'Domain transfer and dev placeholder setup',priority:'Done'},
+      {id:'w5',cat:'AI',text:'Remove AI concierge "Chat with Jessica" section',priority:'High'},
+    ],
+    milestones:[
+      {id:'m1',name:'Design & UI Complete',date:'2026-06-12',status:'done'},
+      {id:'m2',name:'Booking Integration Live',date:'2026-06-26',status:'done'},
+      {id:'m3',name:'Content & Legal Pages Done',date:'2026-07-03',status:'active'},
+      {id:'m4',name:'QA & Client Review',date:'2026-07-10',status:'pending'},
+      {id:'m5',name:'Go Live',date:'2026-07-17',status:'pending'},
+    ],
+    team:[
+      {id:'t1',name:'Darwin',role:'Lead Developer',email:''},
+      {id:'t2',name:'Robert',role:'Previous Owner / Client',email:''},
+    ],
+    categories: [
+      {id:'cat-design-ui',     name:'Design & UI Enhancements'},
+      {id:'cat-gallery',       name:'Gallery Updates'},
+      {id:'cat-rooms',         name:'Rooms Section'},
+      {id:'cat-offers',        name:'Offers Section'},
+      {id:'cat-domain-infra',  name:'Domain & Infrastructure'},
+      {id:'cat-ui-ux-issues',  name:'UI / UX Issues'},
+      {id:'cat-accommodation', name:'Accommodation Section'},
+      {id:'cat-seasonal',      name:'Seasonal Offers / Special Events'},
+      {id:'cat-content-sec',   name:'Content / Section Updates'},
+      {id:'cat-roommaster',    name:'Roommaster Interface Integration'},
+      {id:'cat-email-forms',   name:'Email & Forms Integration'},
+      {id:'cat-open-q',        name:'Open Questions'},
+      {id:'cat-section-dev',   name:'Section Development'},
+      {id:'cat-legal',         name:'Legal Pages'},
+      {id:'cat-cms-backend',   name:'CMS & Backend'},
+      {id:'cat-ai',            name:'AI Integration'},
+      {id:'cat-booking',       name:'Booking System'},
+      {id:'cat-content-legal', name:'Content & Legal'},
+      {id:'cat-cms-enh',       name:'CMS Enhancements'},
+      {id:'cat-form-int',      name:'Form Integration'},
+      {id:'cat-form-final',    name:'Form Finalization'},
+      {id:'cat-assets',        name:'Assets & Access'},
+      {id:'cat-marketing',     name:'Marketing'},
+      {id:'cat-other',         name:'Other'},
+    ].map((c,i)=>({...c, color: catColorForIndex(i)})),
+    nextId:100,
+  });
+  p.pr.period='June 8 – June 22'; p.pr.targetDate='2026-07-05'; p.pr.risk='Updated photos from client: July 8';
+  p.pr.tasks=[
+    {id:'pr1',cat:'cat-design-ui',task:'Logo Update implemented across the site',status:'Completed',date:'2026-06-08',notes:''},
+    {id:'pr2',cat:'cat-design-ui',task:'Dark Mode / Light Mode functionality added',status:'Completed',date:'2026-06-08',notes:''},
+    {id:'pr3',cat:'cat-design-ui',task:'Social Media Links integrated',status:'Completed',date:'2026-06-08',notes:''},
+    {id:'pr4',cat:'cat-gallery',task:'Replaced placeholder images with actual hotel photography',status:'Completed',date:'2026-06-08',notes:''},
+    {id:'pr5',cat:'cat-rooms',task:'All 7 room listings updated and modernized',status:'Completed',date:'2026-06-08',notes:''},
+    {id:'pr6',cat:'cat-offers',task:'All 4 offers redesigned and modernized',status:'Completed',date:'2026-06-08',notes:''},
+    {id:'pr7',cat:'cat-domain-infra',task:'Domain andreashotel.com successfully transferred',status:'Completed',date:'2026-06-08',notes:"Moved to Darwin's GoDaddy. Previous owner: Robert"},
+    {id:'pr8',cat:'cat-domain-infra',task:'stayatandreashotel.com purchased as dev placeholder',status:'Completed',date:'2026-06-08',notes:''},
+    {id:'pr9',cat:'cat-ui-ux-issues',task:'Dark Mode: text colors have low contrast and are difficult to read',status:'Issues / Needed',date:'2026-06-08',notes:''},
+    {id:'pr10',cat:'cat-accommodation',task:'Image for "Andreas Villa Suite" needs correction — replace with actual room photo',status:'Issues / Needed',date:'2026-06-08',notes:''},
+    {id:'pr11',cat:'cat-seasonal',task:'Booking link incorrectly redirects to RFP form',status:'Issues / Needed',date:'2026-06-08',notes:'Needs to point to proper booking flow'},
+    {id:'pr12',cat:'cat-content-sec',task:'Remove AI concierge "Chat with Jessica" section',status:'Completed',date:'2026-06-08',notes:'Changed to Chat with Andreas, section removed'},
+    {id:'pr13',cat:'cat-ui-ux-issues',task:'Chat Icon blocking "Terms" link — needs repositioning',status:'Issues / Needed',date:'2026-06-08',notes:''},
+    {id:'pr14',cat:'cat-roommaster',task:'Embedding via iframe',status:'Completed',date:'2026-06-08',notes:'stayatandreas.com/booking — updated'},
+    {id:'pr15',cat:'cat-email-forms',task:'Subscription form (Mailchimp integration)',status:'In Progress',date:'2026-06-08',notes:''},
+    {id:'pr16',cat:'cat-email-forms',task:'Contact Us & RFP forms',status:'In Progress',date:'2026-06-08',notes:''},
+    {id:'pr17',cat:'cat-open-q',task:'Contact Us Form: Which email should submissions go to?',status:'Issues / Needed',date:'2026-06-08',notes:'Question for Gina/William'},
+    {id:'pr18',cat:'cat-open-q',task:'RFP Form: What is the correct recipient email?',status:'Issues / Needed',date:'2026-06-08',notes:'Question for Gina/William'},
+    {id:'pr19',cat:'cat-domain-infra',task:'Connected dev site to stayatandreas.com and established Supabase database',status:'Completed',date:'2026-06-15',notes:''},
+    {id:'pr20',cat:'cat-section-dev',task:'Finished Spa and Events sections',status:'Completed',date:'2026-06-15',notes:''},
+    {id:'pr21',cat:'cat-legal',task:'Privacy Policy, Terms & Conditions, Cancellation Policy',status:'Completed',date:'2026-06-15',notes:''},
+    {id:'pr22',cat:'cat-cms-backend',task:'Launched CMS backend and finalized admin user creation flow',status:'Completed',date:'2026-06-15',notes:''},
+    {id:'pr23',cat:'cat-ai',task:'Completed agent setup and implemented AI widget updates',status:'Completed',date:'2026-06-15',notes:''},
+    {id:'pr24',cat:'cat-booking',task:'Successfully embedded the booking engine',status:'Completed',date:'2026-06-15',notes:''},
+    {id:'pr25',cat:'cat-content-legal',task:'Updated room amenities and UI copy',status:'Completed',date:'2026-06-15',notes:''},
+    {id:'pr26',cat:'cat-cms-enh',task:'Evaluating transition from Contact Connect to Marketing Suite',status:'In Progress',date:'2026-06-15',notes:''},
+    {id:'pr27',cat:'cat-form-int',task:'Developing email triggers and DB connections for Contact Us and RFP pages',status:'In Progress',date:'2026-06-15',notes:''},
+    {id:'pr28',cat:'cat-form-final',task:'Please confirm recipient emails for Contact Us and RFP inquiries',status:'Issues / Needed',date:'2026-06-15',notes:'Question for Gina/William'},
+    {id:'pr29',cat:'cat-assets',task:'Please provide updated photography, awards banner, and Constant Connect access',status:'Issues / Needed',date:'2026-06-15',notes:'Question for Gina/William'},
+    {id:'pr30',cat:'cat-marketing',task:'Please define preferred mailing list structure for Marketing Suite',status:'Issues / Needed',date:'2026-06-15',notes:'Question for Gina/William'},
+    {id:'pr31',cat:'cat-cms-enh',task:'Admin user access creation and password reset with role-based access',status:'In Progress',date:'2026-06-22',notes:''},
+  ];
+  return p;
+}
+
+function defaultDB(){
+  const slug='andreas-hotel-spa';
+  return {
+    projects:{ [slug]: andreasSeedProject() },
+    activeProject: slug,
+    managers: {
+      'admin': { id:'admin', name:'Darwin', pin:'1234', role:'admin', assignedProjects:[] }
+    }
+  };
+}
+
+// ── Managers / Access ──────────────────────────────────────────
+let currentManager = null; // the logged-in manager object for this session
+
+function isAdmin(){ return currentManager?.role==='admin'; }
+
+function visibleProjectSlugs(){
+  if(!DB.projects) return [];
+  if(isAdmin() || !currentManager) return Object.keys(DB.projects);
+  return (currentManager.assignedProjects||[]).filter(slug=>DB.projects[slug]);
+}
+
+function managerId(name){
+  return 'm'+name.toLowerCase().trim().replace(/[^a-z0-9]/g,'').slice(0,20)+Date.now().toString(36).slice(-4);
+}
+
+function createManager(name,pin,assignedProjects){
+  const id=managerId(name);
+  DB.managers[id]={ id, name:name.trim(), pin:String(pin).trim(), role:'manager', assignedProjects:assignedProjects||[] };
+  localSave(); if(cloudCfg?.binId) cloudSave();
+  return id;
+}
+
+function deleteManager(id){
+  if(DB.managers[id]?.role==='admin'){ alert('Cannot delete the admin account.'); return; }
+  delete DB.managers[id];
+  localSave(); if(cloudCfg?.binId) cloudSave();
+}
+
+// Point S at the active project's data
+function setActiveProject(slug){
+  if(!DB.projects[slug]) return false;
+  DB.activeProject = slug;
+  S = DB.projects[slug];
+  return true;
+}
+
+// Used when the signed-in manager has zero assigned projects —
+// keeps S pointing at something safe instead of leaking a previous project's data.
+function setNoActiveProject(){
+  DB.activeProject = null;
+  S = emptyProjectData('');
+  S.hub.client=''; // explicit — no project name to show
+}
+
+// Call after login/session-resume to ensure the active project is one this manager can see.
+// Falls back to setNoActiveProject() if they have none.
+function ensureValidActiveProject(){
+  const visible=visibleProjectSlugs();
+  if(visible.includes(DB.activeProject)) return; // already valid
+  if(visible.length){ setActiveProject(visible[0]); }
+  else { setNoActiveProject(); }
+}
+
+function createProject(name){
+  const slug = uniqueSlug(slugify(name));
+  DB.projects[slug] = emptyProjectData(name);
+  setActiveProject(slug);
+  // Non-admin managers automatically get assigned to projects they create
+  if(currentManager && currentManager.role!=='admin'){
+    if(!currentManager.assignedProjects) currentManager.assignedProjects=[];
+    currentManager.assignedProjects.push(slug);
+  }
+  localSave();
+  if(cloudCfg?.binId) cloudSave();
+  return slug;
+}
+
+function deleteProject(slug){
+  if(Object.keys(DB.projects).length<=1){ alert('You must keep at least one project.'); return; }
+  delete DB.projects[slug];
+  if(DB.activeProject===slug) setActiveProject(Object.keys(DB.projects)[0]);
+  localSave();
+  if(cloudCfg?.binId) cloudSave();
+}
+
+// ════════════════════════════════════════════════════════════════
+// PERSIST
+// ════════════════════════════════════════════════════════════════
+function localSave() {
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(DB)); } catch(e) {}
+}
+function localLoad() {
+  try {
+    const r = localStorage.getItem(STORE_KEY);
+    if(r) {
+      DB = JSON.parse(r);
+      if(!DB.projects || !Object.keys(DB.projects).length) return false;
+      if(!DB.activeProject || !DB.projects[DB.activeProject]) DB.activeProject=Object.keys(DB.projects)[0];
+      if(!DB.managers || !Object.keys(DB.managers).length) DB.managers={ 'admin': { id:'admin', name:'Darwin', pin:'1234', role:'admin', assignedProjects:[] } };
+      S = DB.projects[DB.activeProject];
+      return true;
+    }
+  } catch(e) {}
+  return false;
+}
+function schedSave() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    localSave();
+    flashSaved();
+    if (cloudCfg?.binId) { clearTimeout(syncTimer); syncTimer = setTimeout(cloudSave, 2000); }
+  }, 600);
+}
+function flashSaved(msg) {
+  const ind = document.getElementById('sync-lbl');
+  if(ind){ const was=ind.textContent; ind.textContent=msg||'saved ✓'; setTimeout(()=>ind.textContent=was,1800); }
+}
+function mainSave() { localSave(); flashSaved('saved ✓'); if(cloudCfg?.binId) cloudSave(); document.getElementById('hub-last-saved').textContent='Last saved '+new Date().toLocaleTimeString(); }
+
+// ════════════════════════════════════════════════════════════════
+// CLOUD — one shared bin for all projects
+// ════════════════════════════════════════════════════════════════
+function setSyncStatus(state,lbl){
+  const d=document.getElementById('sync-dot'); const l=document.getElementById('sync-lbl');
+  if(d) d.className='sync-dot '+(state||''); if(l) l.textContent=lbl||state||'local';
+}
+async function cloudSave(){
+  if(!cloudCfg?.binId) return;
+  setSyncStatus('syncing','saving…');
+  try{
+    const res=await fetch(`${JB_BASE}/${cloudCfg.binId}`,{method:'PUT',headers:{'Content-Type':'application/json','X-Master-Key':cloudCfg.apiKey},body:JSON.stringify({portal:DB})});
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    setSyncStatus('synced','cloud ✓'); setTimeout(()=>setSyncStatus('synced','cloud'),3000);
+  }catch(e){ setSyncStatus('error','sync error'); console.warn(e); }
+}
+async function cloudLoad(){
+  if(!cloudCfg?.binId) return false;
+  try{
+    const res=await fetch(`${JB_BASE}/${cloudCfg.binId}/latest`,{headers:{'X-Master-Key':cloudCfg.apiKey}});
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const rec=(await res.json()).record||{};
+    if(rec.portal && rec.portal.projects && Object.keys(rec.portal.projects).length){
+      DB=rec.portal;
+      if(!DB.activeProject || !DB.projects[DB.activeProject]) DB.activeProject=Object.keys(DB.projects)[0];
+      if(!DB.managers || !Object.keys(DB.managers).length) DB.managers={ 'admin': { id:'admin', name:'Darwin', pin:'1234', role:'admin', assignedProjects:[] } };
+      S=DB.projects[DB.activeProject];
+      localSave(); setSyncStatus('synced','cloud'); return true;
+    }
+    return false;
+  }catch(e){ setSyncStatus('error','offline'); console.warn(e); return false; }
+}
+async function connectCloud(){
+  const apiKey=document.getElementById('cm-key').value.trim();
+  const binId=document.getElementById('cm-bin').value.trim();
+  if(!apiKey){ alert('Please enter your Master Key.'); return; }
+  const btn=document.querySelector('.cm-btn'); btn.textContent='Connecting…'; btn.disabled=true;
+  try{
+    if(binId){
+      cloudCfg={apiKey,binId};
+      const ok=await cloudLoad();
+      if(!ok) await cloudSave();
+    } else {
+      const res=await fetch(JB_BASE,{method:'POST',headers:{'Content-Type':'application/json','X-Master-Key':apiKey,'X-Bin-Name':'arrowheadx-portal','X-Bin-Private':'true'},body:JSON.stringify({portal:DB})});
+      if(!res.ok) throw new Error('Check your API key.');
+      const j=await res.json(); cloudCfg={apiKey,binId:j.metadata.id};
+      setSyncStatus('synced','cloud');
+      setTimeout(()=>alert('Connected!\n\nBin ID: '+cloudCfg.binId+'\n\nSave this ID — other devices need it to connect, and all projects will sync through it.'),300);
+    }
+    localStorage.setItem(CLOUD_KEY,JSON.stringify(cloudCfg));
+    document.getElementById('cloud-overlay').classList.add('hidden');
+    populateAll();
+  }catch(e){ alert('Failed: '+e.message); }
+  btn.textContent='⚡ Connect & Sync'; btn.disabled=false;
+}
+function showCloudSetup(){
+  document.getElementById('cloud-overlay').classList.remove('hidden');
+  if(cloudCfg){ document.getElementById('cm-key').value=cloudCfg.apiKey||''; document.getElementById('cm-bin').value=cloudCfg.binId||''; }
+}
+function skipCloud(){ localStorage.setItem('arrowheadx_skip_cloud','1'); document.getElementById('cloud-overlay').classList.add('hidden'); }
+async function refreshCloud(){
+  if(!cloudCfg?.binId){ showCloudSetup(); return; }
+  setSyncStatus('syncing','loading…');
+  const ok=await cloudLoad();
+  if(ok){ populateAll(); renderProjectSwitcher(); }
+}
+
+// ════════════════════════════════════════════════════════════════
+// PROJECT SWITCHER (topbar) + PROJECTS LANDING VIEW
+// ════════════════════════════════════════════════════════════════
+function renderProjectSwitcher(){
+  const sel=document.getElementById('project-switcher');
+  if(!sel) return;
+  const slugs=visibleProjectSlugs();
+  let html='';
+  if(!slugs.length){
+    html+=`<option value="" disabled selected>No projects assigned</option>`;
+  } else {
+    html+=slugs.map(slug=>{
+      const p=DB.projects[slug];
+      const label=(p.hub?.client||p.name||slug);
+      return `<option value="${slug}"${slug===DB.activeProject?' selected':''}>${esc(label)}</option>`;
+    }).join('');
+  }
+  html+=`<option value="__new__">＋ New Project…</option>`;
+  sel.innerHTML=html;
+}
+function handleProjectSwitcherChange(val){
+  if(val==='__new__'){
+    topbarNewProject();
+    return;
+  }
+  switchProjectFromTopbar(val);
+}
+function switchProjectFromTopbar(slug){
+  if(setActiveProject(slug)){ localSave(); populateAll(); showTab(currentTab==='projects'||currentTab==='team'?'hub':currentTab); }
+}
+function topbarNewProject(){
+  const name=prompt('New project name:');
+  if(!name||!name.trim()){ renderProjectSwitcher(); return; } // restore correct selection if cancelled
+  createProject(name.trim());
+  populateAll();
+  renderProjectSwitcher();
+  showTab('hub');
+}
+
+function renderProjectsView(){
+  const grid=document.getElementById('projects-grid');
+  if(!grid) return;
+  const backBtn=document.getElementById('projects-back-btn');
+  if(backBtn) backBtn.style.display=DB.activeProject?'':'none';
+  const slugs=visibleProjectSlugs();
+  grid.innerHTML = slugs.map(slug=>{
+    const p=DB.projects[slug];
+    const h=p.hub||{};
+    const statusColors={planning:['var(--sand)','var(--muted)'],active:['var(--prog-bg)','var(--prog)'],review:['var(--question-bg)','var(--question)'],'on-hold':['var(--blocked-bg)','var(--blocked)'],completed:['var(--done-bg)','var(--done)']};
+    const sc=statusColors[h.status]||statusColors.planning;
+    const wi=(h.workItems||[]).length, ms=(h.milestones||[]).length, tm=(h.team||[]).length;
+    const tasks=(p.pr?.tasks||[]).length;
+    const isActive=slug===DB.activeProject;
+    return `<div class="proj-card${isActive?' active':''}" onclick="openProject('${slug}')">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div style="font-family:'Cormorant Garamond',serif;font-size:20px;font-style:italic;color:var(--ink)">${esc(h.client||p.name||slug)}</div>
+        <button class="del-btn" onclick="event.stopPropagation();confirmDeleteProject('${slug}')" title="Delete project">✕</button>
+      </div>
+      <div style="font-size:12px;color:var(--muted);margin:6px 0 10px">${esc(h.project||'No project name set')}</div>
+      <span class="pill-sel" style="background:${sc[0]};color:${sc[1]};font-size:10px;padding:3px 10px">${HUB_STATUSES[h.status]||'Planning'}</span>
+      <div style="display:flex;gap:14px;margin-top:14px;font-size:11px;color:var(--faint)">
+        <span>${wi} work items</span><span>${ms} milestones</span><span>${tm} team</span><span>${tasks} tasks</span>
+      </div>
+    </div>`;
+  }).join('') + `<div class="proj-card proj-new" onclick="topbarNewProject()">
+      <div style="font-size:28px;color:var(--border)">+</div>
+      <div style="font-size:12px;color:var(--faint);margin-top:6px">New Project</div>
+    </div>`;
+}
+function openProject(slug){
+  if(setActiveProject(slug)){ localSave(); populateAll(); renderProjectSwitcher(); showTab('hub'); }
+}
+function confirmDeleteProject(slug){
+  const p=DB.projects[slug];
+  if(!confirm(`Delete project "${p.hub?.client||p.name||slug}"? This cannot be undone.`)) return;
+  deleteProject(slug);
+  populateAll(); renderProjectSwitcher(); renderProjectsView();
+}
+
+// ════════════════════════════════════════════════════════════════
+// TAB SWITCHING
+// ════════════════════════════════════════════════════════════════
+let currentTab = 'hub';
+function showTab(tab){
+  if(tab==='team' && !isAdmin()){ tab='projects'; } // safety gate
+  currentTab=tab;
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.main-tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('view-'+tab).classList.add('active');
+  const tabBtn=document.getElementById('t-'+tab);
+  if(tabBtn) tabBtn.classList.add('active');
+  if(tab==='projects') renderProjectsView();
+  if(tab==='hub') populateHub();
+  if(tab==='log') populateDL();
+  if(tab==='pr')  { prRenderStats(); prRender(); }
+  if(tab==='team'){ renderManageTeam(); }
+}
+
+// ════════════════════════════════════════════════════════════════
+// HELPERS
+// ════════════════════════════════════════════════════════════════
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function autoH(el){ el.style.height='auto'; el.style.height=el.scrollHeight+'px'; }
+let _nid=1; function nid(){ return 'n'+(Date.now())+(++_nid); }
+
+// ════════════════════════════════════════════════════════════════
+// EXPORT / IMPORT / RESET
+// ════════════════════════════════════════════════════════════════
+function exportAll(){
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([JSON.stringify({...DB,exportedAt:new Date().toISOString()},null,2)],{type:'application/json'}));
+  a.download='arrowheadx-portal-'+new Date().toISOString().slice(0,10)+'.json'; a.click();
+}
+function importAll(inp){
+  const file=inp.files[0]; if(!file) return;
+  const r=new FileReader();
+  r.onload=e=>{
+    try{
+      const d=JSON.parse(e.target.result);
+      if(!confirm('Replace all projects with this backup?')) return;
+      if(d.projects){ DB=d; if(!DB.activeProject||!DB.projects[DB.activeProject]) DB.activeProject=Object.keys(DB.projects)[0]; S=DB.projects[DB.activeProject]; }
+      else { /* legacy single-project export */ const slug=uniqueSlug(slugify(d.hub?.client||'imported')); DB.projects[slug]={name:d.hub?.client||'Imported',createdAt:new Date().toISOString(),...d}; setActiveProject(slug); }
+      localSave(); populateAll(); renderProjectSwitcher();
+    }catch{ alert('Invalid file.'); }
+    inp.value='';
+  };
+  r.readAsText(file);
+}
+function resetAll(){
+  if(!confirm('Reset ALL projects to defaults? This cannot be undone.')) return;
+  DB=defaultDB(); S=DB.projects[DB.activeProject]; localSave(); populateAll(); renderProjectSwitcher();
+}
+
+// ════════════════════════════════════════════════════════════════
+// ── PROJECT HUB ──────────────────────────────────────────────
+// ════════════════════════════════════════════════════════════════
+function hubAutosave(){ collectHub(); schedSave(); updateBrandName(); hubRenderStats(); }
+function collectHub(){
+  const g=id=>document.getElementById(id)?.value||'';
+  Object.assign(S.hub,{client:g('h-client'),contact:g('h-contact'),email:g('h-email'),url:g('h-url'),
+    project:g('h-project'),type:g('h-type'),start:g('h-start'),launch:g('h-launch'),
+    budget:g('h-budget'),desc:g('h-desc'),goal1:g('h-goal1'),goal2:g('h-goal2'),
+    audience:g('h-audience'),notes:g('h-notes'),questions:g('h-questions')});
+}
+function populateHub(){
+  const h=S.hub; const f=(id,v)=>{ const el=document.getElementById(id); if(el) el.value=v||''; };
+  f('h-client',h.client); f('h-contact',h.contact); f('h-email',h.email); f('h-url',h.url);
+  f('h-project',h.project); f('h-type',h.type); f('h-start',h.start); f('h-launch',h.launch);
+  f('h-budget',h.budget); f('h-desc',h.desc); f('h-goal1',h.goal1); f('h-goal2',h.goal2);
+  f('h-audience',h.audience); f('h-notes',h.notes); f('h-questions',h.questions);
+  setHubStatusUI(h.status||'active');
+  hubRenderTags(); hubRenderCategories(); hubRenderWork(); hubRenderMs(); hubRenderTeam(); hubRenderStats(); updateBrandName();
+}
+function updateBrandName(){
+  const hasProject = !!DB.activeProject;
+  const pt=document.getElementById('hub-page-title');
+  if(pt) pt.innerHTML=hasProject&&S.hub?.client ? `${esc(S.hub.client)} <em>— Project Brief</em>` : 'No <em>Project Selected</em>';
+  const lpt=document.getElementById('log-page-title');
+  if(lpt) lpt.innerHTML=hasProject?(S.hub?.client?esc(S.hub.client):'Project')+'<em> — Daily Log</em>':'No <em>Project Selected</em>';
+  const ppt=document.getElementById('pr-page-title');
+  if(ppt) ppt.innerHTML=hasProject?(S.hub?.client?esc(S.hub.client):'Project')+' <em>Tracker</em>':'No <em>Project Selected</em>';
+  document.title=hasProject?(S.hub?.client||'Project Portal'):'Project Portal';
+}
+function hubRenderStats(){
+  const h=S.hub;
+  document.getElementById('h-ms').textContent=(h.milestones||[]).length;
+  document.getElementById('h-wi').textContent=(h.workItems||[]).length;
+  document.getElementById('h-tm').textContent=(h.team||[]).length;
+  document.getElementById('h-st').textContent=HUB_STATUSES[h.status]||'—';
+}
+function setHubStatus(btn){ S.hub.status=btn.dataset.val; setHubStatusUI(S.hub.status); schedSave(); hubRenderStats(); }
+function setHubStatusUI(val){ document.querySelectorAll('.status-opt').forEach(b=>b.classList.toggle('active',b.dataset.val===val)); }
+
+// Tags
+function hubRenderTags(){ document.getElementById('hub-tag-row').innerHTML=(S.hub.tags||[]).map((t,i)=>`<span class="tag-chip">${esc(t)}<button onclick="hubRemTag(${i})">✕</button></span>`).join(''); }
+function hubAddTag(){ const inp=document.getElementById('hub-tag-in'); const v=inp.value.trim(); if(!v) return; S.hub.tags=[...(S.hub.tags||[]),v]; inp.value=''; hubRenderTags(); schedSave(); }
+function hubRemTag(i){ S.hub.tags.splice(i,1); hubRenderTags(); schedSave(); }
+
+// ── Categories (per-project, used by Daily Log + Progress Report) ──
+function hubRenderCategories(){
+  const list=document.getElementById('cat-list');
+  if(!list) return;
+  const cats=activeCategories();
+  document.getElementById('cat-count').textContent=cats.length+' categor'+(cats.length===1?'y':'ies');
+  list.innerHTML=cats.map((c,i)=>{
+    const inUse=categoryIdInUse(c.id);
+    return `<div class="cat-row">
+      <div class="cat-swatch" style="background:${c.color.color}"></div>
+      <input class="cat-name-input" value="${esc(c.name)}" oninput="hubRenameCategory(${i},this.value)">
+      ${inUse?`<span style="font-size:10px;color:var(--faint);white-space:nowrap">in use</span>`:''}
+      <button class="del-btn" onclick="hubDeleteCategory(${i})" title="${inUse?'Cannot delete — in use by existing tasks':'Delete category'}" ${inUse?'disabled style="opacity:.3;cursor:not-allowed"':''}>✕</button>
+    </div>`;
+  }).join('');
+}
+function hubAddCategory(){
+  const inp=document.getElementById('new-cat-name');
+  const name=inp.value.trim();
+  if(!name) return;
+  const cats=activeCategories();
+  cats.push({ id:'cat-'+nid(), name, color: catColorForIndex(cats.length) });
+  inp.value='';
+  hubRenderCategories();
+  schedSave();
+}
+function hubRenameCategory(i,val){
+  activeCategories()[i].name=val;
+  schedSave();
+  // Refresh any open dropdowns elsewhere without losing focus on this input
+  if(currentTab==='log') dlRenderList();
+  if(currentTab==='pr') prRender();
+}
+function hubDeleteCategory(i){
+  const cats=activeCategories();
+  const c=cats[i];
+  if(categoryIdInUse(c.id)){
+    alert(`"${c.name}" is currently used by one or more Daily Log entries or Progress Report tasks.\n\nReassign those items to a different category first, then delete.`);
+    return;
+  }
+  if(!confirm(`Delete category "${c.name}"?`)) return;
+  cats.splice(i,1);
+  hubRenderCategories();
+  schedSave();
+}
+
+// Work Items
+function hubRenderWork(){
+  const list=document.getElementById('wi-list'); const items=S.hub.workItems||[];
+  list.innerHTML=items.map((item,i)=>{
+    const cc=WI_CAT_COLORS[item.cat]||WI_CAT_COLORS.Other;
+    const catOpts=WI_CATS.map(c=>`<option${c===item.cat?' selected':''}>${c}</option>`).join('');
+    return `<div class="work-item">
+      <select class="pill-sel" style="background:${cc.bg};color:${cc.color}" onchange="wiUpdCat(${i},this.value)">${catOpts}</select>
+      <textarea class="work-ta" rows="1" oninput="autoH(this);wiUpdText(${i},this.value)" placeholder="Describe work…">${esc(item.text)}</textarea>
+      <select class="small-select" onchange="wiUpdPri(${i},this.value)">
+        ${['Low','Medium','High','Critical','Done'].map(p=>`<option${p===item.priority?' selected':''}>${p}</option>`).join('')}
+      </select>
+      <button class="del-btn" onclick="wiDel(${i})">✕</button>
+    </div>`;
+  }).join('');
+  list.querySelectorAll('.work-ta').forEach(autoH);
+  document.getElementById('wi-count').textContent=items.length+' item'+(items.length!==1?'s':'');
+}
+function hubAddWork(){ const last=S.hub.workItems.slice(-1)[0]; S.hub.workItems.push({id:nid(),cat:last?.cat||'UI',text:'',priority:'Medium'}); hubRenderWork(); schedSave(); setTimeout(()=>{const r=document.querySelectorAll('.work-ta');if(r.length)r[r.length-1].focus();},50); }
+function wiUpdCat(i,v){ S.hub.workItems[i].cat=v; hubRenderWork(); schedSave(); }
+function wiUpdText(i,v){ S.hub.workItems[i].text=v; schedSave(); }
+function wiUpdPri(i,v){ S.hub.workItems[i].priority=v; schedSave(); }
+function wiDel(i){ S.hub.workItems.splice(i,1); hubRenderWork(); schedSave(); }
+
+// Milestones
+function hubRenderMs(){
+  const list=document.getElementById('ms-list'); const items=S.hub.milestones||[];
+  list.innerHTML=items.map((ms,i)=>{
+    const stOpts=MS_STATUSES.map(s=>`<option value="${s}"${s===ms.status?' selected':''}>${MS_LABELS[s]}</option>`).join('');
+    return `<div class="ms-item">
+      <div class="ms-num">${i+1}</div>
+      <input class="txt-input" value="${esc(ms.name)}" placeholder="Milestone…" oninput="msUpdName(${i},this.value)">
+      <input type="date" class="pr-date-in" value="${ms.date||''}" onchange="msUpdDate(${i},this.value)">
+      <select class="pill-sel ${MS_CLASSES[ms.status]||''}" onchange="msUpdSt(${i},this.value)">${stOpts}</select>
+      <button class="del-btn" onclick="msDel(${i})">✕</button>
+    </div>`;
+  }).join('');
+  document.getElementById('ms-count').textContent=items.length+' milestone'+(items.length!==1?'s':'');
+}
+function hubAddMs(){ S.hub.milestones.push({id:nid(),name:'',date:'',status:'pending'}); hubRenderMs(); schedSave(); setTimeout(()=>{const r=document.querySelectorAll('#ms-list .txt-input');if(r.length)r[r.length-1].focus();},50); }
+function msUpdName(i,v){ S.hub.milestones[i].name=v; schedSave(); }
+function msUpdDate(i,v){ S.hub.milestones[i].date=v; schedSave(); }
+function msUpdSt(i,v){ S.hub.milestones[i].status=v; hubRenderMs(); schedSave(); }
+function msDel(i){ S.hub.milestones.splice(i,1); hubRenderMs(); schedSave(); }
+
+// Team
+function hubRenderTeam(){
+  const grid=document.getElementById('tm-grid'); const members=S.hub.team||[];
+  grid.innerHTML=members.map((m,i)=>{
+    const ini=(m.name||'?').split(' ').map(w=>w[0]||'').slice(0,2).join('').toUpperCase();
+    return `<div class="team-card">
+      <button class="del-btn" style="position:absolute;top:10px;right:10px" onclick="tmDel(${i})">✕</button>
+      <div class="team-row"><div class="team-avatar" id="av-${i}">${ini}</div><input class="txt-input" style="font-weight:500" value="${esc(m.name)}" placeholder="Full name…" oninput="tmUpd(${i},'name',this.value)"></div>
+      <input class="txt-input" style="font-size:12px;color:var(--muted);border-bottom:1px solid var(--border);padding-bottom:5px;margin-bottom:5px" value="${esc(m.role)}" placeholder="Role / title…" oninput="tmUpd(${i},'role',this.value)">
+      <input class="txt-input" type="email" style="font-size:12px;color:var(--prog)" value="${esc(m.email)}" placeholder="Email…" oninput="tmUpd(${i},'email',this.value)">
+    </div>`;
+  }).join('');
+  document.getElementById('tm-count').textContent=members.length+' member'+(members.length!==1?'s':'');
+}
+function hubAddMember(){ S.hub.team.push({id:nid(),name:'',role:'',email:''}); hubRenderTeam(); schedSave(); setTimeout(()=>{const r=document.querySelectorAll('.team-card .txt-input');if(r.length)r[r.length-2]?.focus();},50); }
+function tmUpd(i,k,v){
+  S.hub.team[i][k]=v;
+  if(k==='name'){ const av=document.getElementById('av-'+i); if(av) av.textContent=v.split(' ').map(w=>w[0]||'').slice(0,2).join('').toUpperCase()||'?'; }
+  document.getElementById('tm-count').textContent=S.hub.team.length+' member'+(S.hub.team.length!==1?'s':'');
+  schedSave();
+}
+function tmDel(i){ S.hub.team.splice(i,1); hubRenderTeam(); schedSave(); }
+
+// ════════════════════════════════════════════════════════════════
+// ── MANAGE TEAM (admin only) ─────────────────────────────────
+// ════════════════════════════════════════════════════════════════
+function renderManageTeam(){
+  if(!isAdmin()) return; // tab is gated, but double-guard
+  const ids=Object.keys(DB.managers||{});
+  document.getElementById('mgr-count').textContent=ids.length+' manager'+(ids.length!==1?'s':'');
+
+  document.getElementById('mgr-list').innerHTML=ids.map(id=>{
+    const m=DB.managers[id];
+    const ini=(m.name||'?').split(' ').map(w=>w[0]||'').slice(0,2).join('').toUpperCase();
+    const projNames=(m.assignedProjects||[]).map(slug=>DB.projects[slug]?.hub?.client||DB.projects[slug]?.name||slug);
+    return `<div class="mgr-card">
+      <div class="mgr-avatar">${ini}</div>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:500">${esc(m.name)} ${m.role==='admin'?'<span style="font-size:10px;color:var(--gold);font-weight:600">· ADMIN</span>':''}</div>
+        <div style="display:flex;align-items:center;gap:6px;margin-top:2px">
+          <span style="font-size:11px;color:var(--faint)">PIN:</span>
+          <input class="txt-input" style="font-size:11px;color:var(--muted);max-width:90px;border:1px solid var(--border);border-radius:3px;padding:2px 6px;background:var(--white)" value="${esc(m.pin)}" maxlength="12" onchange="adminUpdatePin('${id}',this.value)">
+        </div>
+        ${m.role!=='admin' ? `<div class="mgr-proj-list">${projNames.length?projNames.map(n=>`<span class="mgr-proj-chip">${esc(n)}</span>`).join(''):'<span style="font-size:11px;color:var(--faint);font-style:italic">No projects assigned</span>'}</div>` : `<div style="font-size:11px;color:var(--faint);font-style:italic;margin-top:4px">Sees all projects</div>`}
+      </div>
+      ${m.role!=='admin' ? `<button class="del-btn" onclick="openAssignModal('${id}')" title="Edit project access" style="margin-right:4px">✎</button>` : ''}
+      ${m.role!=='admin' ? `<button class="del-btn" onclick="confirmDeleteManager('${id}')" title="Remove manager">✕</button>` : ''}
+    </div>`;
+  }).join('');
+
+  // Populate the "assign projects" checklist for the NEW manager form
+  const allSlugs=Object.keys(DB.projects);
+  document.getElementById('new-mgr-projects').innerHTML=allSlugs.map(slug=>{
+    const p=DB.projects[slug];
+    const label=p.hub?.client||p.name||slug;
+    return `<label class="proj-check-row"><input type="checkbox" value="${slug}" class="new-mgr-proj-cb"> ${esc(label)}</label>`;
+  }).join('');
+}
+
+function adminUpdatePin(id,val){
+  const pin=val.trim();
+  if(pin.length<4){ alert('PIN must be at least 4 digits.'); renderManageTeam(); return; }
+  DB.managers[id].pin=pin;
+  localSave(); if(cloudCfg?.binId) cloudSave();
+  flashSaved('PIN updated ✓');
+}
+
+function addManagerFromForm(){
+  const name=document.getElementById('new-mgr-name').value.trim();
+  const pin=document.getElementById('new-mgr-pin').value.trim();
+  if(!name){ alert('Please enter a name.'); return; }
+  if(!pin || pin.length<4){ alert('Please enter a PIN of at least 4 digits.'); return; }
+
+  const checked=[...document.querySelectorAll('.new-mgr-proj-cb:checked')].map(cb=>cb.value);
+  createManager(name,pin,checked);
+
+  document.getElementById('new-mgr-name').value='';
+  document.getElementById('new-mgr-pin').value='';
+  renderManageTeam();
+  alert(`✓ ${name} added. They can now sign in with PIN ${pin} and will see ${checked.length} assigned project${checked.length!==1?'s':''}.`);
+}
+
+function confirmDeleteManager(id){
+  const m=DB.managers[id];
+  if(!confirm(`Remove manager "${m.name}"? They will no longer be able to sign in.`)) return;
+  deleteManager(id);
+  renderManageTeam();
+}
+
+function openAssignModal(id){
+  const m=DB.managers[id];
+  if(!m) return;
+  const allSlugs=Object.keys(DB.projects);
+  const current=new Set(m.assignedProjects||[]);
+  const list=allSlugs.map(slug=>{
+    const p=DB.projects[slug];
+    const label=p.hub?.client||p.name||slug;
+    return `${current.has(slug)?'[x]':'[ ]'} ${label} (${slug})`;
+  }).join('\n');
+  const input=prompt(
+    `Editing project access for ${m.name}.\n\nCurrently assigned:\n${[...current].map(s=>DB.projects[s]?.hub?.client||s).join(', ')||'(none)'}\n\nType the project names or slugs to assign, separated by commas:\n\nAvailable: ${allSlugs.map(s=>DB.projects[s]?.hub?.client||s).join(', ')}`,
+    [...current].map(s=>DB.projects[s]?.hub?.client||s).join(', ')
+  );
+  if(input===null) return; // cancelled
+  const wanted=input.split(',').map(s=>s.trim().toLowerCase()).filter(Boolean);
+  const matched=allSlugs.filter(slug=>{
+    const label=(DB.projects[slug]?.hub?.client||DB.projects[slug]?.name||slug).toLowerCase();
+    return wanted.includes(label) || wanted.includes(slug.toLowerCase());
+  });
+  m.assignedProjects=matched;
+  localSave(); if(cloudCfg?.binId) cloudSave();
+  renderManageTeam();
+}
+
+// ════════════════════════════════════════════════════════════════
+// ── DAILY LOG ────────────────────────────────────────────────
+// ════════════════════════════════════════════════════════════════
+function populateDL(){
+  if(!S.dl) S.dl={entries:[]};
+  if(!S.dl.entries) S.dl.entries=[];
+
+  // Populate Category dropdown
+  const catSel=document.getElementById('dl-f-cat');
+  if(catSel) catSel.innerHTML=catOptionsHTML(activeCategories()[0]?.id);
+
+  // Populate Status dropdown
+  const stSel=document.getElementById('dl-f-status');
+  if(stSel) stSel.innerHTML=PR_STATUSES.map(s=>`<option>${s}</option>`).join('');
+
+  // Default date field to today if empty
+  const dateEl=document.getElementById('dl-f-date');
+  if(dateEl && !dateEl.value) dateEl.value=new Date().toISOString().slice(0,10);
+
+  dlRenderList();
+}
+
+function dlAddEntry(){
+  const cat   = document.getElementById('dl-f-cat')?.value || activeCategories()[0]?.id || 'cat-other';
+  const task  = document.getElementById('dl-f-task')?.value.trim() || '';
+  const status= document.getElementById('dl-f-status')?.value || 'Planning';
+  const date  = document.getElementById('dl-f-date')?.value || new Date().toISOString().slice(0,10);
+  const notes = document.getElementById('dl-f-notes')?.value || '';
+
+  if(!task){ alert('Please enter a task description.'); return; }
+
+  S.dl.entries.push({ id:nid(), cat, task, status, date, notes });
+  schedSave();
+  dlRenderList();
+
+  // Clear form for next entry (keep category/status/date for faster repeat entry)
+  document.getElementById('dl-f-task').value='';
+  document.getElementById('dl-f-notes').value='';
+  document.getElementById('dl-f-task').focus();
+}
+
+function dlRenderList(){
+  const tbody=document.getElementById('dl-tbody');
+  if(!tbody) return;
+  const entries=S.dl.entries||[];
+  document.getElementById('dl-count').textContent=entries.length+' entr'+(entries.length===1?'y':'ies');
+
+  if(!entries.length){
+    tbody.innerHTML=`<tr><td colspan="6" style="padding:24px;text-align:center;color:var(--faint);font-style:italic;font-size:13px">No entries yet. Add one above.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML=entries.map((e,i)=>{
+    const cc=catColor(e.cat);
+    const catOpts=catOptionsHTML(e.cat);
+    const stOpts=PR_STATUSES.map(s=>`<option${s===e.status?' selected':''}>${s}</option>`).join('');
+    const stCls=e.status==='Completed'?'ps-Completed':e.status==='In Progress'?'ps-In-Progress':e.status==='Planning'?'ps-Planning':'ps-Issues';
+    return `<tr>
+      <td><div class="pr-td"><select class="pill-sel" style="background:${cc.bg};color:${cc.color}" onchange="dlUpdEntry(${i},'cat',this.value)">${catOpts}</select></div></td>
+      <td><div class="pr-td"><textarea class="pr-text-ta" rows="1" oninput="autoH(this);dlUpdEntry(${i},'task',this.value)" placeholder="Task…">${esc(e.task)}</textarea></div></td>
+      <td><div class="pr-td"><select class="pill-sel ${stCls}" onchange="dlUpdEntry(${i},'status',this.value,this)">${stOpts}</select></div></td>
+      <td><div class="pr-td"><input type="date" class="pr-date-in" value="${e.date||''}" onchange="dlUpdEntry(${i},'date',this.value)"></div></td>
+      <td><div class="pr-td"><textarea class="pr-note-ta" rows="1" oninput="autoH(this);dlUpdEntry(${i},'notes',this.value)" placeholder="Notes…">${esc(e.notes||'')}</textarea></div></td>
+      <td><div class="pr-td" style="justify-content:center"><button class="del-btn" onclick="dlDelEntry(${i})">✕</button></div></td>
+    </tr>`;
+  }).join('');
+  tbody.querySelectorAll('.pr-text-ta,.pr-note-ta').forEach(autoH);
+}
+
+function dlUpdEntry(i,key,val,sel){
+  S.dl.entries[i][key]=val;
+  if(key==='status'&&sel) sel.className='pill-sel '+(val==='Completed'?'ps-Completed':val==='In Progress'?'ps-In-Progress':val==='Planning'?'ps-Planning':'ps-Issues');
+  if(key==='cat') dlRenderList(); // refresh pill color
+  schedSave();
+}
+
+function dlDelEntry(i){
+  if(!confirm('Remove this entry?')) return;
+  S.dl.entries.splice(i,1);
+  schedSave();
+  dlRenderList();
+}
+
+// ── Save: push all Daily Log entries into Progress Report ──
+function dlSaveAll(){
+  const entries=S.dl.entries||[];
+  if(!entries.length){ alert('No entries to save. Add at least one entry first.'); return; }
+
+  if(!S.pr) S.pr={period:'',targetDate:'',risk:'',tasks:[]};
+  if(!S.pr.tasks) S.pr.tasks=[];
+
+  let added=0, updated=0;
+  entries.forEach(e=>{
+    if(!e.task || !e.task.trim()) return;
+    const ei=S.pr.tasks.findIndex(t=>t.task.trim().toLowerCase()===e.task.trim().toLowerCase() && t.date===e.date);
+    if(ei>=0){
+      S.pr.tasks[ei].status=e.status; S.pr.tasks[ei].cat=e.cat; S.pr.tasks[ei].notes=e.notes;
+      updated++;
+    } else {
+      S.pr.tasks.push({ id:nid(), cat:e.cat, task:e.task, status:e.status, date:e.date, notes:e.notes });
+      added++;
+    }
+  });
+
+  schedSave();
+  flashSaved('saved ✓');
+  document.getElementById('dl-last-saved').textContent='Last saved '+new Date().toLocaleTimeString();
+
+  const parts=[]; if(added) parts.push(added+' added'); if(updated) parts.push(updated+' updated');
+  alert(`✓ Daily Log saved!\n\n${parts.join(' · ')} to Progress Report.\n\nClick 📊 Progress Report to review.`);
+}
+
+// ════════════════════════════════════════════════════════════════
+// ── PROGRESS REPORT ──────────────────────────────────────────
+// ════════════════════════════════════════════════════════════════
+function prMetaSave(){
+  S.pr.period=document.getElementById('pr-period')?.value||'';
+  S.pr.targetDate=document.getElementById('pr-target')?.value||'';
+  S.pr.risk=document.getElementById('pr-risk')?.value||'';
+  schedSave();
+}
+function prSetFilter(val,btn){ prFilterActive=val; document.querySelectorAll('.pr-filter').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); prRender(); }
+
+function prRenderStats(){
+  const tasks=S.pr.tasks||[];
+  const planning=tasks.filter(t=>t.status==='Planning').length;
+  const done=tasks.filter(t=>t.status==='Completed').length;
+  const prog=tasks.filter(t=>t.status==='In Progress').length;
+  const issue=tasks.filter(t=>t.status==='Issues / Needed').length;
+  const pct=tasks.length?Math.round(done/tasks.length*100):0;
+  document.getElementById('pr-total').textContent=tasks.length;
+  document.getElementById('pr-planning').textContent=planning;
+  document.getElementById('pr-done').textContent=done;
+  document.getElementById('pr-prog').textContent=prog;
+  document.getElementById('pr-issue').textContent=issue;
+  const bar=document.getElementById('pr-bar'); if(bar) bar.style.width=pct+'%';
+  // Populate meta
+  const pe=document.getElementById('pr-period'); if(pe&&S.pr.period) pe.value=S.pr.period;
+  const te=document.getElementById('pr-target'); if(te&&S.pr.targetDate) te.value=S.pr.targetDate;
+  const re=document.getElementById('pr-risk');   if(re&&S.pr.risk) re.value=S.pr.risk;
+}
+
+function prUpdStatus(i,v,sel){
+  S.pr.tasks[i].status=v;
+  sel.className='pill-sel '+(v==='Completed'?'ps-Completed':v==='In Progress'?'ps-In-Progress':v==='Planning'?'ps-Planning':'ps-Issues');
+  schedSave(); prRenderStats();
+}
+
+// Compute the Monday of the week containing the given date, and a display label
+function weekKeyForDate(dateStr){
+  if(!dateStr) return {key:'9999-zz', label:'No Date'};
+  const d=new Date(dateStr+'T00:00:00');
+  const day=d.getDay(); // 0=Sun..6=Sat
+  const diffToMon=day===0?-6:1-day;
+  const mon=new Date(d); mon.setDate(d.getDate()+diffToMon);
+  const sun=new Date(mon); sun.setDate(mon.getDate()+6);
+  const fmt=dt=>dt.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+  const key=mon.toISOString().slice(0,10);
+  const label=`Week of ${fmt(mon)} – ${fmt(sun)}`;
+  return {key,label};
+}
+
+function prRender(){
+  const search=(document.getElementById('pr-search')?.value||'').toLowerCase();
+  let tasks=(S.pr.tasks||[]).filter(t=>{
+    if(prFilterActive!=='all'&&t.status!==prFilterActive) return false;
+    if(search&&!(t.task+t.cat+t.notes).toLowerCase().includes(search)) return false;
+    return true;
+  });
+  const tbody=document.getElementById('pr-tbody');
+  if(!tasks.length){ tbody.innerHTML=`<tr><td colspan="6" style="padding:24px;text-align:center;color:var(--faint);font-style:italic;font-size:13px">No tasks match the current filter.</td></tr>`; return; }
+
+  // Group by Monday-start week computed from each task's date
+  const groups={};
+  tasks.forEach(t=>{
+    const {key,label}=weekKeyForDate(t.date);
+    if(!groups[key]) groups[key]={label,items:[]};
+    groups[key].items.push(t);
+  });
+  const sortedKeys=Object.keys(groups).sort();
+
+  let html='';
+  sortedKeys.forEach(key=>{
+    const group=groups[key];
+    const wTasks=group.items;
+    const dn=wTasks.filter(t=>t.status==='Completed').length;
+    html+=`<tr class="pr-week-hdr"><td colspan="6">${esc(group.label)} &nbsp;·&nbsp; ${dn}/${wTasks.length} completed</td></tr>`;
+    wTasks.forEach(task=>{
+      const idx=S.pr.tasks.findIndex(t=>t.id===task.id);
+      const cc=catColor(task.cat);
+      const catOpts=catOptionsHTML(task.cat);
+      const stOpts=PR_STATUSES.map(s=>`<option${s===task.status?' selected':''}>${s}</option>`).join('');
+      const stCls=task.status==='Completed'?'ps-Completed':task.status==='In Progress'?'ps-In-Progress':task.status==='Planning'?'ps-Planning':'ps-Issues';
+      html+=`<tr>
+        <td><div class="pr-td"><select class="pill-sel" style="background:${cc.bg};color:${cc.color}" onchange="prUpdCat(${idx},this.value)">${catOpts}</select></div></td>
+        <td><div class="pr-td"><textarea class="pr-text-ta" rows="1" oninput="autoH(this);prUpdTask(${idx},this.value)" placeholder="Task…">${esc(task.task)}</textarea></div></td>
+        <td><div class="pr-td"><select class="pill-sel ${stCls}" onchange="prUpdStatus(${idx},this.value,this)">${stOpts}</select></div></td>
+        <td><div class="pr-td"><input type="date" class="pr-date-in" value="${task.date||''}" onchange="prUpdDate(${idx},this.value)"></div></td>
+        <td><div class="pr-td"><textarea class="pr-note-ta" rows="1" oninput="autoH(this);prUpdNote(${idx},this.value)" placeholder="Notes…">${esc(task.notes||'')}</textarea></div></td>
+        <td><div class="pr-td" style="justify-content:center"><button class="del-btn" onclick="prDel(${idx})">✕</button></div></td>
+      </tr>`;
+    });
+  });
+  tbody.innerHTML=html;
+  tbody.querySelectorAll('.pr-text-ta,.pr-note-ta').forEach(autoH);
+}
+
+function prUpdCat(i,v){ S.pr.tasks[i].cat=v; schedSave(); prRender(); }
+function prUpdTask(i,v){ S.pr.tasks[i].task=v; schedSave(); }
+function prUpdNote(i,v){ S.pr.tasks[i].notes=v; schedSave(); }
+function prDel(i){ if(!confirm('Remove this task?')) return; S.pr.tasks.splice(i,1); schedSave(); prRenderStats(); prRender(); }
+function prAddTask(){
+  const last=S.pr.tasks.slice(-1)[0];
+  S.pr.tasks.push({id:nid(),cat:last?.cat||activeCategories()[0]?.id||'cat-other',task:'',status:'Planning',date:new Date().toISOString().slice(0,10),notes:''});
+  schedSave(); prRenderStats(); prRender();
+  setTimeout(()=>{const r=document.querySelectorAll('.pr-text-ta');if(r.length)r[r.length-1].focus();},50);
+}
+
+// ── Progress Report — scoped Export / Import (just this project's tasks) ──
+function prExportTasks(){
+  const projectName=S.hub?.client||S.name||'project';
+  const payload={
+    project:projectName,
+    period:S.pr.period||'',
+    targetDate:S.pr.targetDate||'',
+    risk:S.pr.risk||'',
+    tasks:S.pr.tasks||[],
+    exportedAt:new Date().toISOString(),
+  };
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}));
+  a.download='progress-report-'+slugify(projectName)+'-'+new Date().toISOString().slice(0,10)+'.json';
+  a.click();
+}
+
+function prImportTasks(inp){
+  const file=inp.files[0]; if(!file) return;
+  const r=new FileReader();
+  r.onload=e=>{
+    try{
+      const d=JSON.parse(e.target.result);
+      if(!Array.isArray(d.tasks)){ alert('This file does not look like a Progress Report export.'); inp.value=''; return; }
+      const mode=confirm(`Import ${d.tasks.length} task(s) from "${d.project||'unknown project'}"?\n\nClick OK to MERGE with existing tasks (recommended).\nClick Cancel to REPLACE all current tasks instead.`);
+      if(!S.pr) S.pr={period:'',targetDate:'',risk:'',tasks:[]};
+      if(mode){
+        // Merge — skip exact duplicate task text+date combos
+        let added=0;
+        d.tasks.forEach(t=>{
+          const exists=S.pr.tasks.some(x=>x.task.trim().toLowerCase()===String(t.task||'').trim().toLowerCase() && x.date===t.date);
+          if(!exists){ S.pr.tasks.push({...t,id:nid()}); added++; }
+        });
+        alert(`✓ Merged. ${added} new task(s) added, ${d.tasks.length-added} duplicate(s) skipped.`);
+      } else {
+        S.pr.tasks=d.tasks.map(t=>({...t,id:nid()}));
+        if(d.period) S.pr.period=d.period;
+        if(d.targetDate) S.pr.targetDate=d.targetDate;
+        if(d.risk) S.pr.risk=d.risk;
+        alert(`✓ Replaced. ${d.tasks.length} task(s) loaded.`);
+      }
+      schedSave(); prRenderStats(); prRender();
+    }catch(err){ alert('Could not read file. Make sure it is a valid Progress Report export.'); }
+    inp.value='';
+  };
+  r.readAsText(file);
+}
+
+// ════════════════════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════════════════════
+// LOGIN / SESSION
+// ════════════════════════════════════════════════════════════════
+const SESSION_KEY = 'arrowheadx_session_manager_id';
+
+function showLogin(){
+  document.getElementById('login-screen').classList.remove('hidden');
+  document.getElementById('app-root').classList.add('hidden');
+  document.getElementById('login-name').value='';
+  document.getElementById('login-pin').value='';
+  document.getElementById('login-error').textContent='';
+  setTimeout(()=>document.getElementById('login-name')?.focus(),50);
+}
+
+function findManagerByName(name){
+  const target=name.trim().toLowerCase();
+  if(!target) return null;
+  const id=Object.keys(DB.managers||{}).find(id=>DB.managers[id].name.trim().toLowerCase()===target);
+  return id?DB.managers[id]:null;
+}
+function findManagerIdByName(name){
+  const target=name.trim().toLowerCase();
+  if(!target) return null;
+  return Object.keys(DB.managers||{}).find(id=>DB.managers[id].name.trim().toLowerCase()===target)||null;
+}
+
+function doLogin(){
+  const name=document.getElementById('login-name').value;
+  const pin=document.getElementById('login-pin').value.trim();
+  const err=document.getElementById('login-error');
+
+  if(!name.trim()){ err.textContent='Please enter your name.'; return; }
+
+  const id=findManagerIdByName(name);
+  const mgr=id?DB.managers[id]:null;
+
+  if(!mgr || String(mgr.pin)!==pin){
+    err.textContent='Name or PIN not recognized.';
+    document.getElementById('login-pin').value='';
+    return;
+  }
+
+  currentManager=mgr;
+  try{ sessionStorage.setItem(SESSION_KEY,id); }catch(e){}
+
+  document.getElementById('login-screen').classList.add('hidden');
+  document.getElementById('app-root').classList.remove('hidden');
+
+  // Make sure the active project is one this manager can actually see
+  ensureValidActiveProject();
+
+  renderManagerBadge();
+  populateAll();
+  showTab(DB.activeProject ? 'hub' : 'projects');
+}
+
+function doLogout(){
+  currentManager=null;
+  try{ sessionStorage.removeItem(SESSION_KEY); }catch(e){}
+  showLogin();
+}
+
+// ── Change My PIN (any logged-in manager, including admin) ──
+function openChangePinModal(){
+  if(!currentManager){ return; }
+  document.getElementById('pin-modal-name').textContent='Signed in as '+currentManager.name;
+  document.getElementById('pin-current').value='';
+  document.getElementById('pin-new').value='';
+  document.getElementById('pin-confirm').value='';
+  document.getElementById('pin-error').textContent='';
+  document.getElementById('pin-overlay').classList.remove('hidden');
+  setTimeout(()=>document.getElementById('pin-current')?.focus(),50);
+}
+function closeChangePinModal(){
+  document.getElementById('pin-overlay').classList.add('hidden');
+}
+function submitChangePin(){
+  const cur=document.getElementById('pin-current').value.trim();
+  const next=document.getElementById('pin-new').value.trim();
+  const confirm_=document.getElementById('pin-confirm').value.trim();
+  const err=document.getElementById('pin-error');
+
+  if(String(currentManager.pin)!==cur){ err.textContent='Current PIN is incorrect.'; return; }
+  if(next.length<4){ err.textContent='New PIN must be at least 4 digits.'; return; }
+  if(next!==confirm_){ err.textContent='New PIN and confirmation do not match.'; return; }
+
+  // currentManager is a live reference into DB.managers — updating it updates DB directly
+  currentManager.pin=next;
+  localSave();
+  if(cloudCfg?.binId) cloudSave();
+  closeChangePinModal();
+  flashSaved('PIN updated ✓');
+  alert('Your PIN has been updated.');
+}
+
+function renderManagerBadge(){
+  const el=document.getElementById('manager-badge');
+  if(el&&currentManager) el.textContent=currentManager.name+(currentManager.role==='admin'?' · Admin':'');
+  const teamItem=document.getElementById('sm-team-access');
+  if(teamItem) teamItem.style.display=isAdmin()?'':'none';
+}
+
+// ── Settings dropdown menu ──
+function toggleSettingsMenu(){
+  const menu=document.getElementById('settings-menu');
+  menu.classList.toggle('hidden');
+}
+function closeSettingsMenu(){
+  document.getElementById('settings-menu').classList.add('hidden');
+}
+document.addEventListener('click', function(e){
+  const menu=document.getElementById('settings-menu');
+  const btn=document.getElementById('settings-btn');
+  if(!menu||menu.classList.contains('hidden')) return;
+  if(!menu.contains(e.target) && e.target!==btn){ menu.classList.add('hidden'); }
+});
+
+function tryResumeSession(){
+  try{
+    const id=sessionStorage.getItem(SESSION_KEY);
+    if(id && DB.managers[id]){
+      currentManager=DB.managers[id];
+      return true;
+    }
+  }catch(e){}
+  return false;
+}
+
+// ════════════════════════════════════════════════════════════════
+function populateAll(){
+  renderProjectSwitcher();
+  populateHub();
+  populateDL();
+  if(currentTab==='pr'){ prRenderStats(); prRender(); }
+  if(currentTab==='projects') renderProjectsView();
+  if(currentTab==='team') renderManageTeam();
+  updateBrandName();
+}
+
+async function init(){
+  // Load cloud config
+  try{ const cc=localStorage.getItem(CLOUD_KEY); if(cc) cloudCfg=JSON.parse(cc); }catch(e){}
+
+  // Load state — local first
+  if(!localLoad()){ DB=defaultDB(); S=DB.projects[DB.activeProject]; }
+
+  // Overwrite with cloud if connected
+  if(cloudCfg?.apiKey&&cloudCfg?.binId){
+    setSyncStatus('syncing','loading…');
+    await cloudLoad();
+  } else if(!localStorage.getItem('arrowheadx_skip_cloud')){
+    setTimeout(showCloudSetup,1200);
+  }
+
+  // Try to resume an existing session, else show login
+  if(tryResumeSession()){
+    document.getElementById('login-screen').classList.add('hidden');
+    document.getElementById('app-root').classList.remove('hidden');
+    ensureValidActiveProject();
+    renderManagerBadge();
+    populateAll();
+    showTab(DB.activeProject ? 'hub' : 'projects');
+  } else {
+    showLogin();
+  }
+}
+
+init();
+</script>
+</body>
+</html>
