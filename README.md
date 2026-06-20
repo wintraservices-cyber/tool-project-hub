@@ -1,6 +1,6 @@
 # ArrowheadX Project Portal
 
-**GitHub Repo:** [wintraservices-cyber/ProjectDiary-andreas](https://github.com/wintraservices-cyber/ProjectDiary-andreas)
+**GitHub Repo:** [wintraservices-cyber/ProjectHub](https://github.com/wintraservices-cyber/ProjectHub)
 
 Managed by [ArrowheadX AI](https://arrowheadx.ai)
 
