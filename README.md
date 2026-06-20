@@ -1,5 +1,7 @@
 # ArrowheadX Project Portal
 
+Direct URL: https://arrowheadx-ai.vercel.app/project-portal.html
+
 **GitHub Repo:** [wintraservices-cyber/ProjectHub](https://github.com/wintraservices-cyber/ProjectHub)
 
 Managed by [ArrowheadX AI](https://arrowheadx.ai)
