@@ -164,6 +164,8 @@ body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--ink);fon
 #cloud-overlay.hidden{display:none}
 #pin-overlay{display:flex}
 #pin-overlay.hidden{display:none}
+#prelogin-overlay{display:flex}
+#prelogin-overlay.hidden{display:none}
 .cloud-modal{background:var(--white);border-radius:8px;padding:36px 40px;max-width:480px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.3)}
 .cm-eye{font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);margin-bottom:8px}
 .cm-title{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:300;margin-bottom:8px}
@@ -248,7 +250,7 @@ body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--ink);fon
   <div class="login-box">
     <div class="login-eye">ArrowheadX AI</div>
     <h1 class="login-title">Project <em>Portal</em></h1>
-    <p class="login-sub">Sign in to access your assigned projects.</p>
+    <p class="login-sub" id="login-sub-text">Sign in to access your assigned projects.</p>
 
     <label class="cm-label">Name</label>
     <input class="cm-input" id="login-name" type="text" placeholder="Your name" autocomplete="off" onkeydown="if(event.key==='Enter')document.getElementById('login-pin').focus()">
@@ -258,6 +260,23 @@ body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--ink);fon
 
     <button class="cm-btn" onclick="doLogin()">Sign In</button>
     <div id="login-error" class="login-error"></div>
+    <span class="cm-skip" id="login-connect-link" onclick="showPreLoginConnect()">First time here? Connect to your team's workspace…</span>
+  </div>
+</div>
+
+<!-- Pre-login cloud connect (for brand-new devices joining an existing team) -->
+<div id="prelogin-overlay" class="hidden" style="position:fixed;inset:0;background:rgba(28,26,23,.75);display:flex;align-items:center;justify-content:center;z-index:2100;backdrop-filter:blur(4px)">
+  <div class="cloud-modal">
+    <div class="cm-eye">Join Existing Workspace</div>
+    <div class="cm-title">Connect Before Signing In</div>
+    <div class="cm-sub">If your team already set up cloud sync, enter the same Master Key and Bin ID they used. This pulls down the real team list so you can sign in.</div>
+    <label class="cm-label">Master Key</label>
+    <input class="cm-input" id="pre-key" type="password" placeholder="$2a$10$…">
+    <label class="cm-label">Bin ID</label>
+    <input class="cm-input" id="pre-bin" placeholder="e.g. 64abc123…">
+    <div id="prelogin-error" class="login-error"></div>
+    <button class="cm-btn" onclick="preLoginConnect()">⚡ Connect</button>
+    <span class="cm-skip" onclick="closePreLoginConnect()">Cancel</span>
   </div>
 </div>
 
@@ -1682,6 +1701,43 @@ function showLogin(){
   setTimeout(()=>document.getElementById('login-name')?.focus(),50);
 }
 
+// ── Pre-login cloud connect — lets a brand-new device pull the real team list
+//    before signing in, instead of getting stuck with no valid login. ──
+function showPreLoginConnect(){
+  document.getElementById('prelogin-overlay').classList.remove('hidden');
+  document.getElementById('pre-key').value=cloudCfg?.apiKey||'';
+  document.getElementById('pre-bin').value=cloudCfg?.binId||'';
+  document.getElementById('prelogin-error').textContent='';
+}
+function closePreLoginConnect(){
+  document.getElementById('prelogin-overlay').classList.add('hidden');
+}
+async function preLoginConnect(){
+  const apiKey=document.getElementById('pre-key').value.trim();
+  const binId=document.getElementById('pre-bin').value.trim();
+  const err=document.getElementById('prelogin-error');
+  if(!apiKey||!binId){ err.textContent='Please enter both the Master Key and Bin ID.'; return; }
+
+  const btn=document.querySelector('#prelogin-overlay .cm-btn');
+  btn.textContent='Connecting…'; btn.disabled=true;
+
+  cloudCfg={apiKey,binId};
+  const ok=await cloudLoad();
+  btn.textContent='⚡ Connect'; btn.disabled=false;
+
+  if(!ok){
+    err.textContent='Could not load data. Check the Master Key and Bin ID and try again.';
+    cloudCfg=null;
+    return;
+  }
+
+  localStorage.setItem(CLOUD_KEY,JSON.stringify(cloudCfg));
+  closePreLoginConnect();
+  document.getElementById('login-error').textContent='';
+  document.getElementById('login-sub-text').textContent='Connected! Sign in with the name and PIN your admin gave you.';
+  setTimeout(()=>document.getElementById('login-name')?.focus(),50);
+}
+
 function findManagerByName(name){
   const target=name.trim().toLowerCase();
   if(!target) return null;
@@ -1814,12 +1870,11 @@ async function init(){
   // Load state — local first
   if(!localLoad()){ DB=defaultDB(); S=DB.projects[DB.activeProject]; }
 
-  // Overwrite with cloud if connected
+  // If cloud is already connected, pull the latest shared data BEFORE showing login,
+  // so a new person on a fresh browser sees the real manager list and can sign in.
   if(cloudCfg?.apiKey&&cloudCfg?.binId){
     setSyncStatus('syncing','loading…');
     await cloudLoad();
-  } else if(!localStorage.getItem('arrowheadx_skip_cloud')){
-    setTimeout(showCloudSetup,1200);
   }
 
   // Try to resume an existing session, else show login
@@ -1832,6 +1887,13 @@ async function init(){
     showTab(DB.activeProject ? 'hub' : 'projects');
   } else {
     showLogin();
+    // Only offer first-time cloud setup if NOT already connected — this is for
+    // the very first person (the admin) setting things up. Anyone else opening
+    // a fresh browser should already have a Bin ID to type into the login-screen's
+    // own "Connect to existing team" link instead (see showLogin / loginConnectExisting).
+    if(!cloudCfg && !localStorage.getItem('arrowheadx_skip_cloud')){
+      setTimeout(showCloudSetup,1200);
+    }
   }
 }
 
