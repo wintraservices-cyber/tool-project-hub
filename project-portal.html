@@ -164,8 +164,6 @@ body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--ink);fon
 #cloud-overlay.hidden{display:none}
 #pin-overlay{display:flex}
 #pin-overlay.hidden{display:none}
-#prelogin-overlay{display:flex}
-#prelogin-overlay.hidden{display:none}
 .cloud-modal{background:var(--white);border-radius:8px;padding:36px 40px;max-width:480px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.3)}
 .cm-eye{font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);margin-bottom:8px}
 .cm-title{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:300;margin-bottom:8px}
@@ -250,7 +248,7 @@ body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--ink);fon
   <div class="login-box">
     <div class="login-eye">ArrowheadX AI</div>
     <h1 class="login-title">Project <em>Portal</em></h1>
-    <p class="login-sub" id="login-sub-text">Sign in to access your assigned projects.</p>
+    <p class="login-sub">Sign in to access your assigned projects.</p>
 
     <label class="cm-label">Name</label>
     <input class="cm-input" id="login-name" type="text" placeholder="Your name" autocomplete="off" onkeydown="if(event.key==='Enter')document.getElementById('login-pin').focus()">
@@ -260,23 +258,6 @@ body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--ink);fon
 
     <button class="cm-btn" onclick="doLogin()">Sign In</button>
     <div id="login-error" class="login-error"></div>
-    <span class="cm-skip" id="login-connect-link" onclick="showPreLoginConnect()">First time here? Connect to your team's workspace…</span>
-  </div>
-</div>
-
-<!-- Pre-login cloud connect (for brand-new devices joining an existing team) -->
-<div id="prelogin-overlay" class="hidden" style="position:fixed;inset:0;background:rgba(28,26,23,.75);align-items:center;justify-content:center;z-index:2100;backdrop-filter:blur(4px)">
-  <div class="cloud-modal">
-    <div class="cm-eye">Join Existing Workspace</div>
-    <div class="cm-title">Connect Before Signing In</div>
-    <div class="cm-sub">If your team already set up cloud sync, enter the same Master Key and Bin ID they used. This pulls down the real team list so you can sign in.</div>
-    <label class="cm-label">Master Key</label>
-    <input class="cm-input" id="pre-key" type="password" placeholder="$2a$10$…">
-    <label class="cm-label">Bin ID</label>
-    <input class="cm-input" id="pre-bin" placeholder="e.g. 64abc123…">
-    <div id="prelogin-error" class="login-error"></div>
-    <button class="cm-btn" onclick="preLoginConnect()">⚡ Connect</button>
-    <span class="cm-skip" onclick="closePreLoginConnect()">Cancel</span>
   </div>
 </div>
 
@@ -405,7 +386,7 @@ body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--ink);fon
     <div class="card-head"><span class="card-label">🏨 Client &amp; Project Info</span></div>
     <div class="card-body-split">
       <div>
-        <div class="field"><label class="field-label">Client Name <span class="req">*</span></label><input class="f-input" id="h-client" placeholder="e.g. Andreas Hotel &amp; Spa" oninput="hubAutosave()"></div>
+        <div class="field"><label class="field-label">Client Name <span class="req">*</span></label><input class="f-input" id="h-client" placeholder="e.g. Sample Client Co." oninput="hubAutosave()"></div>
         <div class="field"><label class="field-label">Contact Person</label><input class="f-input" id="h-contact" placeholder="Primary point of contact" oninput="hubAutosave()"></div>
         <div class="field"><label class="field-label">Contact Email</label><input class="f-input" type="email" id="h-email" placeholder="email@example.com" oninput="hubAutosave()"></div>
         <div class="field"><label class="field-label">Website / URL</label><input class="f-input" id="h-url" placeholder="https://" oninput="hubAutosave()"></div>
@@ -756,106 +737,64 @@ function emptyProjectData(name){
   };
 }
 
-function andreasSeedProject(){
-  const p = emptyProjectData('Andreas Hotel & Spa');
+function sampleSeedProject(){
+  const p = emptyProjectData('Sample Client Co.');
   Object.assign(p.hub, {
-    client:'Andreas Hotel & Spa',contact:'',email:'',url:'andreashotel.com',
-    project:'Website Revamp 2026',type:'Website Revamp',start:'2026-05-25',launch:'',
-    status:'active',budget:'',desc:'Full website revamp including booking integration, CMS, AI concierge, and legal pages.',
-    goal1:'Launch a fully functional, modern hotel website with integrated booking.',
-    goal2:'Improve UX, add Spa/Events sections, integrate Mailchimp and forms.',
-    audience:'Hotel guests, corporate travellers, event planners',
-    tags:['Hotel','Vercel','Supabase','CMS'],notes:'',questions:'Confirm recipient emails for Contact Us and RFP forms.',
+    client:'Sample Client Co.',contact:'Jane Doe',email:'jane@sampleclient.com',url:'sampleclient.com',
+    project:'Website Revamp',type:'Website Revamp',start:'2026-05-01',launch:'',
+    status:'active',budget:'',desc:'Example project showing how Project Hub, Daily Log, and Progress Report work together.',
+    goal1:'Launch a modern, responsive website with updated branding.',
+    goal2:'Improve navigation and add a contact/inquiry form.',
+    audience:'Prospective customers and existing clients',
+    tags:['Demo','Example'],notes:'This is sample data — edit or delete it, or create a new project from scratch.',questions:'',
     workItems:[
-      {id:'w1',cat:'UI',text:'Logo update and dark/light mode toggle',priority:'Done'},
-      {id:'w2',cat:'UX',text:'Rooms and Offers sections content modernization',priority:'Done'},
-      {id:'w3',cat:'Booking',text:'Roommaster booking engine integration via iframe',priority:'Done'},
-      {id:'w4',cat:'Infrastructure',text:'Domain transfer and dev placeholder setup',priority:'Done'},
-      {id:'w5',cat:'AI',text:'Remove AI concierge "Chat with Jessica" section',priority:'High'},
+      {id:'w1',cat:'UI',text:'Homepage redesign',priority:'Done'},
+      {id:'w2',cat:'UX',text:'Navigation and sitemap update',priority:'Done'},
+      {id:'w3',cat:'Backend',text:'Contact form integration',priority:'High'},
+      {id:'w4',cat:'Infrastructure',text:'Domain and hosting setup',priority:'Done'},
+      {id:'w5',cat:'Content',text:'Copy and image placeholders replaced with final assets',priority:'Medium'},
     ],
     milestones:[
-      {id:'m1',name:'Design & UI Complete',date:'2026-06-12',status:'done'},
-      {id:'m2',name:'Booking Integration Live',date:'2026-06-26',status:'done'},
-      {id:'m3',name:'Content & Legal Pages Done',date:'2026-07-03',status:'active'},
-      {id:'m4',name:'QA & Client Review',date:'2026-07-10',status:'pending'},
-      {id:'m5',name:'Go Live',date:'2026-07-17',status:'pending'},
+      {id:'m1',name:'Design Complete',date:'2026-06-01',status:'done'},
+      {id:'m2',name:'Development Complete',date:'2026-06-20',status:'active'},
+      {id:'m3',name:'Client Review',date:'2026-07-01',status:'pending'},
+      {id:'m4',name:'Go Live',date:'2026-07-15',status:'pending'},
     ],
     team:[
       {id:'t1',name:'Darwin',role:'Lead Developer',email:''},
-      {id:'t2',name:'Robert',role:'Previous Owner / Client',email:''},
+      {id:'t2',name:'Jane Doe',role:'Client Contact',email:'jane@sampleclient.com'},
     ],
     categories: [
-      {id:'cat-design-ui',     name:'Design & UI Enhancements'},
-      {id:'cat-gallery',       name:'Gallery Updates'},
-      {id:'cat-rooms',         name:'Rooms Section'},
-      {id:'cat-offers',        name:'Offers Section'},
-      {id:'cat-domain-infra',  name:'Domain & Infrastructure'},
-      {id:'cat-ui-ux-issues',  name:'UI / UX Issues'},
-      {id:'cat-accommodation', name:'Accommodation Section'},
-      {id:'cat-seasonal',      name:'Seasonal Offers / Special Events'},
-      {id:'cat-content-sec',   name:'Content / Section Updates'},
-      {id:'cat-roommaster',    name:'Roommaster Interface Integration'},
-      {id:'cat-email-forms',   name:'Email & Forms Integration'},
-      {id:'cat-open-q',        name:'Open Questions'},
-      {id:'cat-section-dev',   name:'Section Development'},
-      {id:'cat-legal',         name:'Legal Pages'},
-      {id:'cat-cms-backend',   name:'CMS & Backend'},
-      {id:'cat-ai',            name:'AI Integration'},
-      {id:'cat-booking',       name:'Booking System'},
-      {id:'cat-content-legal', name:'Content & Legal'},
-      {id:'cat-cms-enh',       name:'CMS Enhancements'},
-      {id:'cat-form-int',      name:'Form Integration'},
-      {id:'cat-form-final',    name:'Form Finalization'},
-      {id:'cat-assets',        name:'Assets & Access'},
-      {id:'cat-marketing',     name:'Marketing'},
-      {id:'cat-other',         name:'Other'},
+      {id:'cat-design-ui',    name:'Design & UI'},
+      {id:'cat-frontend',     name:'Frontend Development'},
+      {id:'cat-backend-infra',name:'Backend & Infrastructure'},
+      {id:'cat-integrations', name:'Integrations'},
+      {id:'cat-content',      name:'Content & Assets'},
+      {id:'cat-qa',           name:'QA / Bugs'},
+      {id:'cat-other',        name:'Other'},
     ].map((c,i)=>({...c, color: catColorForIndex(i)})),
-    nextId:100,
+    nextId:20,
   });
-  p.pr.period='June 8 – June 22'; p.pr.targetDate='2026-07-05'; p.pr.risk='Updated photos from client: July 8';
+  p.pr.period='June 1 – June 20'; p.pr.targetDate='2026-07-15'; p.pr.risk='Awaiting final copy from client';
   p.pr.tasks=[
-    {id:'pr1',cat:'cat-design-ui',task:'Logo Update implemented across the site',status:'Completed',date:'2026-06-08',notes:''},
-    {id:'pr2',cat:'cat-design-ui',task:'Dark Mode / Light Mode functionality added',status:'Completed',date:'2026-06-08',notes:''},
-    {id:'pr3',cat:'cat-design-ui',task:'Social Media Links integrated',status:'Completed',date:'2026-06-08',notes:''},
-    {id:'pr4',cat:'cat-gallery',task:'Replaced placeholder images with actual hotel photography',status:'Completed',date:'2026-06-08',notes:''},
-    {id:'pr5',cat:'cat-rooms',task:'All 7 room listings updated and modernized',status:'Completed',date:'2026-06-08',notes:''},
-    {id:'pr6',cat:'cat-offers',task:'All 4 offers redesigned and modernized',status:'Completed',date:'2026-06-08',notes:''},
-    {id:'pr7',cat:'cat-domain-infra',task:'Domain andreashotel.com successfully transferred',status:'Completed',date:'2026-06-08',notes:"Moved to Darwin's GoDaddy. Previous owner: Robert"},
-    {id:'pr8',cat:'cat-domain-infra',task:'stayatandreashotel.com purchased as dev placeholder',status:'Completed',date:'2026-06-08',notes:''},
-    {id:'pr9',cat:'cat-ui-ux-issues',task:'Dark Mode: text colors have low contrast and are difficult to read',status:'Issues / Needed',date:'2026-06-08',notes:''},
-    {id:'pr10',cat:'cat-accommodation',task:'Image for "Andreas Villa Suite" needs correction — replace with actual room photo',status:'Issues / Needed',date:'2026-06-08',notes:''},
-    {id:'pr11',cat:'cat-seasonal',task:'Booking link incorrectly redirects to RFP form',status:'Issues / Needed',date:'2026-06-08',notes:'Needs to point to proper booking flow'},
-    {id:'pr12',cat:'cat-content-sec',task:'Remove AI concierge "Chat with Jessica" section',status:'Completed',date:'2026-06-08',notes:'Changed to Chat with Andreas, section removed'},
-    {id:'pr13',cat:'cat-ui-ux-issues',task:'Chat Icon blocking "Terms" link — needs repositioning',status:'Issues / Needed',date:'2026-06-08',notes:''},
-    {id:'pr14',cat:'cat-roommaster',task:'Embedding via iframe',status:'Completed',date:'2026-06-08',notes:'stayatandreas.com/booking — updated'},
-    {id:'pr15',cat:'cat-email-forms',task:'Subscription form (Mailchimp integration)',status:'In Progress',date:'2026-06-08',notes:''},
-    {id:'pr16',cat:'cat-email-forms',task:'Contact Us & RFP forms',status:'In Progress',date:'2026-06-08',notes:''},
-    {id:'pr17',cat:'cat-open-q',task:'Contact Us Form: Which email should submissions go to?',status:'Issues / Needed',date:'2026-06-08',notes:'Question for Gina/William'},
-    {id:'pr18',cat:'cat-open-q',task:'RFP Form: What is the correct recipient email?',status:'Issues / Needed',date:'2026-06-08',notes:'Question for Gina/William'},
-    {id:'pr19',cat:'cat-domain-infra',task:'Connected dev site to stayatandreas.com and established Supabase database',status:'Completed',date:'2026-06-15',notes:''},
-    {id:'pr20',cat:'cat-section-dev',task:'Finished Spa and Events sections',status:'Completed',date:'2026-06-15',notes:''},
-    {id:'pr21',cat:'cat-legal',task:'Privacy Policy, Terms & Conditions, Cancellation Policy',status:'Completed',date:'2026-06-15',notes:''},
-    {id:'pr22',cat:'cat-cms-backend',task:'Launched CMS backend and finalized admin user creation flow',status:'Completed',date:'2026-06-15',notes:''},
-    {id:'pr23',cat:'cat-ai',task:'Completed agent setup and implemented AI widget updates',status:'Completed',date:'2026-06-15',notes:''},
-    {id:'pr24',cat:'cat-booking',task:'Successfully embedded the booking engine',status:'Completed',date:'2026-06-15',notes:''},
-    {id:'pr25',cat:'cat-content-legal',task:'Updated room amenities and UI copy',status:'Completed',date:'2026-06-15',notes:''},
-    {id:'pr26',cat:'cat-cms-enh',task:'Evaluating transition from Contact Connect to Marketing Suite',status:'In Progress',date:'2026-06-15',notes:''},
-    {id:'pr27',cat:'cat-form-int',task:'Developing email triggers and DB connections for Contact Us and RFP pages',status:'In Progress',date:'2026-06-15',notes:''},
-    {id:'pr28',cat:'cat-form-final',task:'Please confirm recipient emails for Contact Us and RFP inquiries',status:'Issues / Needed',date:'2026-06-15',notes:'Question for Gina/William'},
-    {id:'pr29',cat:'cat-assets',task:'Please provide updated photography, awards banner, and Constant Connect access',status:'Issues / Needed',date:'2026-06-15',notes:'Question for Gina/William'},
-    {id:'pr30',cat:'cat-marketing',task:'Please define preferred mailing list structure for Marketing Suite',status:'Issues / Needed',date:'2026-06-15',notes:'Question for Gina/William'},
-    {id:'pr31',cat:'cat-cms-enh',task:'Admin user access creation and password reset with role-based access',status:'In Progress',date:'2026-06-22',notes:''},
+    {id:'pr1',cat:'cat-design-ui',task:'Homepage layout finalized',status:'Completed',date:'2026-06-01',notes:''},
+    {id:'pr2',cat:'cat-design-ui',task:'Color palette and typography set',status:'Completed',date:'2026-06-01',notes:''},
+    {id:'pr3',cat:'cat-frontend',task:'Responsive navigation built',status:'Completed',date:'2026-06-05',notes:''},
+    {id:'pr4',cat:'cat-backend-infra',task:'Hosting and domain configured',status:'Completed',date:'2026-06-05',notes:''},
+    {id:'pr5',cat:'cat-integrations',task:'Contact form wired to email notifications',status:'In Progress',date:'2026-06-12',notes:''},
+    {id:'pr6',cat:'cat-content',task:'Placeholder images need final replacements',status:'Issues / Needed',date:'2026-06-15',notes:'Waiting on client assets'},
+    {id:'pr7',cat:'cat-qa',task:'Cross-browser testing',status:'Planning',date:'2026-06-20',notes:''},
   ];
   return p;
 }
 
 function defaultDB(){
-  const slug='andreas-hotel-spa';
+  const slug='sample-client-co';
   return {
-    projects:{ [slug]: andreasSeedProject() },
+    projects:{ [slug]: sampleSeedProject() },
     activeProject: slug,
     managers: {
-      'admin': { id:'admin', name:'Darwin', pin:'1234', role:'admin', assignedProjects:[] }
+      'admin': { id:'admin', name:'Darwin', pin:'1234567890', role:'admin', assignedProjects:[] }
     }
   };
 }
@@ -948,7 +887,7 @@ function localLoad() {
       DB = JSON.parse(r);
       if(!DB.projects || !Object.keys(DB.projects).length) return false;
       if(!DB.activeProject || !DB.projects[DB.activeProject]) DB.activeProject=Object.keys(DB.projects)[0];
-      if(!DB.managers || !Object.keys(DB.managers).length) DB.managers={ 'admin': { id:'admin', name:'Darwin', pin:'1234', role:'admin', assignedProjects:[] } };
+      if(!DB.managers || !Object.keys(DB.managers).length) DB.managers={ 'admin': { id:'admin', name:'Darwin', pin:'1234567890', role:'admin', assignedProjects:[] } };
       S = DB.projects[DB.activeProject];
       return true;
     }
@@ -994,7 +933,7 @@ async function cloudLoad(){
     if(rec.portal && rec.portal.projects && Object.keys(rec.portal.projects).length){
       DB=rec.portal;
       if(!DB.activeProject || !DB.projects[DB.activeProject]) DB.activeProject=Object.keys(DB.projects)[0];
-      if(!DB.managers || !Object.keys(DB.managers).length) DB.managers={ 'admin': { id:'admin', name:'Darwin', pin:'1234', role:'admin', assignedProjects:[] } };
+      if(!DB.managers || !Object.keys(DB.managers).length) DB.managers={ 'admin': { id:'admin', name:'Darwin', pin:'1234567890', role:'admin', assignedProjects:[] } };
       S=DB.projects[DB.activeProject];
       localSave(); setSyncStatus('synced','cloud'); return true;
     }
@@ -1701,43 +1640,6 @@ function showLogin(){
   setTimeout(()=>document.getElementById('login-name')?.focus(),50);
 }
 
-// ── Pre-login cloud connect — lets a brand-new device pull the real team list
-//    before signing in, instead of getting stuck with no valid login. ──
-function showPreLoginConnect(){
-  document.getElementById('prelogin-overlay').classList.remove('hidden');
-  document.getElementById('pre-key').value=cloudCfg?.apiKey||'';
-  document.getElementById('pre-bin').value=cloudCfg?.binId||'';
-  document.getElementById('prelogin-error').textContent='';
-}
-function closePreLoginConnect(){
-  document.getElementById('prelogin-overlay').classList.add('hidden');
-}
-async function preLoginConnect(){
-  const apiKey=document.getElementById('pre-key').value.trim();
-  const binId=document.getElementById('pre-bin').value.trim();
-  const err=document.getElementById('prelogin-error');
-  if(!apiKey||!binId){ err.textContent='Please enter both the Master Key and Bin ID.'; return; }
-
-  const btn=document.querySelector('#prelogin-overlay .cm-btn');
-  btn.textContent='Connecting…'; btn.disabled=true;
-
-  cloudCfg={apiKey,binId};
-  const ok=await cloudLoad();
-  btn.textContent='⚡ Connect'; btn.disabled=false;
-
-  if(!ok){
-    err.textContent='Could not load data. Check the Master Key and Bin ID and try again.';
-    cloudCfg=null;
-    return;
-  }
-
-  localStorage.setItem(CLOUD_KEY,JSON.stringify(cloudCfg));
-  closePreLoginConnect();
-  document.getElementById('login-error').textContent='';
-  document.getElementById('login-sub-text').textContent='Connected! Sign in with the name and PIN your admin gave you.';
-  setTimeout(()=>document.getElementById('login-name')?.focus(),50);
-}
-
 function findManagerByName(name){
   const target=name.trim().toLowerCase();
   if(!target) return null;
@@ -1870,11 +1772,12 @@ async function init(){
   // Load state — local first
   if(!localLoad()){ DB=defaultDB(); S=DB.projects[DB.activeProject]; }
 
-  // If cloud is already connected, pull the latest shared data BEFORE showing login,
-  // so a new person on a fresh browser sees the real manager list and can sign in.
+  // Overwrite with cloud if connected
   if(cloudCfg?.apiKey&&cloudCfg?.binId){
     setSyncStatus('syncing','loading…');
     await cloudLoad();
+  } else if(!localStorage.getItem('arrowheadx_skip_cloud')){
+    setTimeout(showCloudSetup,1200);
   }
 
   // Try to resume an existing session, else show login
@@ -1887,13 +1790,6 @@ async function init(){
     showTab(DB.activeProject ? 'hub' : 'projects');
   } else {
     showLogin();
-    // Only offer first-time cloud setup if NOT already connected — this is for
-    // the very first person (the admin) setting things up. Anyone else opening
-    // a fresh browser should already have a Bin ID to type into the login-screen's
-    // own "Connect to existing team" link instead (see showLogin / loginConnectExisting).
-    if(!cloudCfg && !localStorage.getItem('arrowheadx_skip_cloud')){
-      setTimeout(showCloudSetup,1200);
-    }
   }
 }
 
