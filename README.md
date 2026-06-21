@@ -31,7 +31,7 @@ Supports **multiple clients/projects**, **PIN-based sign-in** with per-manager p
 ## Sign In
 
 - Type your **name** and **PIN** (no dropdown — just type and go)
-- Default admin account: **Darwin** / PIN `1234` — change this immediately after first deploy via **⚙ Settings → 🔑 Change My PIN**
+- Default admin account: **Darwin** / PIN `1234567890` — change this immediately after first deploy via **⚙ Settings → 🔑 Change My PIN**
 - Sessions last for the current browser tab/session (`sessionStorage`) — closing the browser requires signing in again
 
 ### Roles
