@@ -328,7 +328,7 @@ body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--ink);fon
         <div class="sm-divider"></div>
         <div class="sm-section-label">Cloud Sync</div>
         <button class="sm-item" onclick="closeSettingsMenu();refreshCloud()">☁ Refresh from Cloud</button>
-        <button class="sm-item" onclick="closeSettingsMenu();showCloudSetup()">⚙ Sync Settings</button>
+        <button class="sm-item" id="sm-sync-settings" onclick="closeSettingsMenu();showCloudSetupFromMenu()" style="display:none">⚙ Sync Settings</button>
         <div class="sm-divider"></div>
         <div class="sm-section-label">Data</div>
         <button class="sm-item" onclick="closeSettingsMenu();exportAll()">⬇ Export All Data</button>
@@ -967,6 +967,10 @@ function showCloudSetup(){
   document.getElementById('cloud-overlay').classList.remove('hidden');
   if(cloudCfg){ document.getElementById('cm-key').value=cloudCfg.apiKey||''; document.getElementById('cm-bin').value=cloudCfg.binId||''; }
 }
+function showCloudSetupFromMenu(){
+  if(!isAdmin()){ alert('Only the admin can view or change Cloud Sync settings.'); return; }
+  showCloudSetup();
+}
 function skipCloud(){ localStorage.setItem('arrowheadx_skip_cloud','1'); document.getElementById('cloud-overlay').classList.add('hidden'); }
 async function refreshCloud(){
   if(!cloudCfg?.binId){ showCloudSetup(); return; }
@@ -1285,7 +1289,7 @@ function renderManageTeam(){
         <div style="font-size:13px;font-weight:500">${esc(m.name)} ${m.role==='admin'?'<span style="font-size:10px;color:var(--gold);font-weight:600">· ADMIN</span>':''}</div>
         <div style="display:flex;align-items:center;gap:6px;margin-top:2px">
           <span style="font-size:11px;color:var(--faint)">PIN:</span>
-          <input class="txt-input" style="font-size:11px;color:var(--muted);max-width:90px;border:1px solid var(--border);border-radius:3px;padding:2px 6px;background:var(--white)" value="${esc(m.pin)}" maxlength="12" onchange="adminUpdatePin('${id}',this.value)">
+          <input class="txt-input" type="password" style="font-size:11px;color:var(--muted);max-width:90px;border:1px solid var(--border);border-radius:3px;padding:2px 6px;background:var(--white)" value="${esc(m.pin)}" maxlength="12" onchange="adminUpdatePin('${id}',this.value)" onfocus="this.type='text'" onblur="this.type='password'">
         </div>
         ${m.role!=='admin' ? `<div class="mgr-proj-list">${projNames.length?projNames.map(n=>`<span class="mgr-proj-chip">${esc(n)}</span>`).join(''):'<span style="font-size:11px;color:var(--faint);font-style:italic">No projects assigned</span>'}</div>` : `<div style="font-size:11px;color:var(--faint);font-style:italic;margin-top:4px">Sees all projects</div>`}
       </div>
@@ -1680,6 +1684,14 @@ function doLogin(){
   renderManagerBadge();
   populateAll();
   showTab(DB.activeProject ? 'hub' : 'projects');
+
+  // Force a PIN change if this account is still on the known default — never let it slide silently
+  if(mgr.role==='admin' && String(mgr.pin)==='1234567890'){
+    setTimeout(()=>{
+      alert('This account is still using the default PIN. Please set a new one now.');
+      openChangePinModal();
+    },200);
+  }
 }
 
 function doLogout(){
@@ -1726,6 +1738,8 @@ function renderManagerBadge(){
   if(el&&currentManager) el.textContent=currentManager.name+(currentManager.role==='admin'?' · Admin':'');
   const teamItem=document.getElementById('sm-team-access');
   if(teamItem) teamItem.style.display=isAdmin()?'':'none';
+  const syncItem=document.getElementById('sm-sync-settings');
+  if(syncItem) syncItem.style.display=isAdmin()?'':'none';
 }
 
 // ── Settings dropdown menu ──
